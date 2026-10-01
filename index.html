@@ -199,9 +199,9 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
         <div class="bells" id="bells">
           <p>With chimes on you can close your eyes. Each bell tells you a step has finished and what to do next. Tap one to hear it.</p>
           <button type="button" class="bell" id="bell-inh" data-bell="inh"><svg class="pip" viewBox="0 0 28 22" aria-hidden="true"><circle cx="14" cy="6" r="3.5"/></svg><span><b>Bright ting</b> In-breath done. Hold, or breathe out.</span></button>
-          <button type="button" class="bell" id="bell-hold" data-bell="hold"><svg class="pip" viewBox="0 0 28 22" aria-hidden="true"><circle cx="14" cy="10.5" r="4.2"/></svg><span><b>Soft middle bell</b> Hold done. Breathe out while it rings.</span></button>
-          <button type="button" class="bell" id="bell-exh" data-bell="exh"><svg class="pip" viewBox="0 0 28 22" aria-hidden="true"><circle cx="14" cy="15" r="5"/></svg><span><b>Soft low bell</b> Out-breath done. Breathe in.</span></button>
-          <p class="small">The soft low bell also starts the session, and all three play in a row to end it. On an iPhone, turn the silent switch off to hear them.</p>
+          <button type="button" class="bell" id="bell-hold" data-bell="hold"><svg class="pip" viewBox="0 0 28 22" aria-hidden="true"><circle cx="14" cy="15.5" r="6"/></svg><span><b>Deep bell</b> Hold done. Breathe out while it rings.</span></button>
+          <button type="button" class="bell" id="bell-exh" data-bell="exh"><svg class="pip" viewBox="0 0 28 22" aria-hidden="true"><circle cx="14" cy="11" r="4.5"/></svg><span><b>Soft bell</b> Out-breath done. Breathe in.</span></button>
+          <p class="small">The soft bell also starts the session, and all three play in a row to end it. On an iPhone, turn the silent switch off to hear them.</p>
         </div>
       </div>
 
@@ -366,7 +366,7 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
   }
   // three sounds that differ in kind and rhythm, not just pitch, so they're easy to tell apart with eyes closed
   //   inh  -> one bright, high "ting" (small glass bell)
-  //   hold -> a middle glass bell that rings on through the whole out-breath
+  //   hold -> a deep bass bell that rings on through the whole out-breath
   //   exh  -> the same glass bell an octave lower, softer onset and a longer fade
   function voice(t, partials, peak, attack, decay, level) {
     const out = ac.createGain(); out.connect(ac.destination);
@@ -386,8 +386,10 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
       if (name === 'inh') {
         voice(t, [[1318.5, 1], [2637, 0.25], [3633, 0.08]], 0.16, 0.004, 1.8, level);
       } else if (name === 'hold') {
-        // two partials a breath apart give a slow shimmer, so the long ring sounds alive rather than flat
-        voice(t, [[880, 1], [881.2, 0.6], [1760, 0.12], [2423, 0.04]], 0.15, 0.03, Math.max(2, ring || S.exh), level);
+        // deep bell on A2. Phone speakers can't play 110 Hz itself, so the 220/330/440 harmonics carry the
+        // bass there (the ear fills in the missing low note); headphones get the real thing.
+        // Partials a fraction of a hertz apart give a slow shimmer so the long ring sounds alive.
+        voice(t, [[110, 1], [110.5, 0.7], [220, 0.65], [220.8, 0.35], [303.6, 0.18], [330, 0.25], [440, 0.1]], 0.24, 0.05, Math.max(2, ring || S.exh), level);
       } else {
         voice(t, [[659.3, 1], [1318.5, 0.18], [1816, 0.05]], 0.17, 0.03, 3.2, level);
       }
