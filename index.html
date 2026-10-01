@@ -18,73 +18,74 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
 <style>
-/* Layout: one calm instrument. Breathing figure + live cue on the left, the pattern and cue settings on the right, guidance underneath. Stacks to one column on a phone. */
+/* Layout: under the water. A moving sea of light fills the screen; a glowing orb breathes at the centre, with
+   the rhythm wave beneath it. Settings and notes sit on frosted glass. Starting a session hides everything but
+   the orb (focus mode). One committed look, deep ocean blue rather than black, so no light/dark switch. */
 :root {
-  --bg: #e8efed;
-  --surface: #f6faf9;
-  --ink: #132a28;
-  --muted: #526d67;
-  --line: #c6d6d1;
-  --accent: #2a7770;
-  --accent-ink: #ffffff;
-  --lymph: #c4860f;
-  --warn: #9a4a1c;
+  color-scheme: dark;
+  --sea-top: #17647a;
+  --sea-deep: #0a2b44;
+  --bg: #0d3a52;
+  --surface: rgba(255, 255, 255, 0.07);
+  --surface-2: rgba(255, 255, 255, 0.13);
+  --ink: #effafb;
+  --muted: #b3d3dc;
+  --line: rgba(255, 255, 255, 0.17);
+  --accent: #86e6e2;
+  --accent-ink: #06303f;
+  --lymph: #ffd27a;
+  --warn: #ffb38a;
+  --bodyfill: rgba(255, 255, 255, 0.06);
   --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
   --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0d1716; --surface: #142120; --ink: #dbe9e5; --muted: #8aa49e; --line: #263735;
-    --accent: #5fbfb3; --accent-ink: #0d1716; --lymph: #e6b653; --warn: #e79a6b; color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #0d1716; --surface: #142120; --ink: #dbe9e5; --muted: #8aa49e; --line: #263735;
-  --accent: #5fbfb3; --accent-ink: #0d1716; --lymph: #e6b653; --warn: #e79a6b; color-scheme: dark;
-}
 
 * { box-sizing: border-box; }
-body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55; }
-.wrap { max-width: 1080px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 56px; display: grid; gap: 28px; }
+body { background: linear-gradient(180deg, var(--sea-top), var(--sea-deep) 75%) var(--sea-deep); background-attachment: fixed; color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55; min-height: 100%; }
+#sea { position: fixed; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; pointer-events: none; }
+.wrap { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 64px; display: grid; gap: 28px; }
 
-header { display: grid; gap: 6px; max-width: 62ch; }
-.eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
-h1 { font-family: var(--display); font-weight: 700; font-size: clamp(30px, 6vw, 46px); line-height: 1.05; margin: 0; letter-spacing: -.01em; text-wrap: balance; }
-header p { margin: 0; color: var(--muted); }
+.glass { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 20px; -webkit-backdrop-filter: blur(12px) saturate(1.2); backdrop-filter: blur(12px) saturate(1.2); box-shadow: 0 10px 40px rgba(2, 20, 34, 0.25); }
 
-.app { display: grid; gap: 20px; grid-template-columns: 1fr; }
-@media (min-width: 860px) { .app { grid-template-columns: 1.15fr 1fr; align-items: start; } }
+header.top { display: grid; gap: 6px; max-width: 62ch; text-shadow: 0 2px 18px rgba(2, 20, 34, 0.35); }
+.eyebrow { font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(34px, 7vw, 56px); line-height: 1.02; margin: 0; letter-spacing: -.015em; text-wrap: balance; }
+header.top p { margin: 0; color: var(--muted); }
 
-.stage { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px; display: grid; gap: 14px; justify-items: center; min-width: 0; }
-canvas { width: 100%; max-width: 380px; aspect-ratio: 1; display: block; }
-.cue { text-align: center; display: grid; gap: 2px; min-height: 118px; align-content: start; }
-.phase { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 7vw, 40px); line-height: 1.1; }
-.count { font-family: var(--display); font-weight: 500; font-size: 22px; color: var(--accent); font-variant-numeric: tabular-nums; min-height: 1.3em; }
+.app { display: grid; gap: 24px; grid-template-columns: 1fr; }
+@media (min-width: 860px) { .app { grid-template-columns: 1.1fr 1fr; align-items: start; } .stage { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); } }
+
+.stage { display: grid; gap: 14px; justify-items: center; min-width: 0; }
+.orbwrap { position: relative; width: 100%; max-width: 360px; }
+#orb { width: 100%; aspect-ratio: 1; display: block; }
+.count { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--display); font-weight: 500; font-size: clamp(44px, 12vw, 64px); color: var(--accent-ink); font-variant-numeric: tabular-nums; pointer-events: none; }
+.cue { text-align: center; display: grid; gap: 4px; min-height: 96px; align-content: start; }
+.phase { font-family: var(--display); font-weight: 700; font-size: clamp(30px, 7vw, 44px); line-height: 1.1; text-shadow: 0 0 28px rgba(134, 230, 226, 0.35); }
 .hint { color: var(--muted); max-width: 34ch; margin: 0 auto; }
 
-#wave { width: 100%; max-width: 100%; aspect-ratio: auto; height: 84px; }
+#wave { width: 100%; max-width: 100%; height: 84px; display: block; }
 .waterrow { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--muted); }
 .waterrow input { flex: 1; min-width: 0; accent-color: var(--accent); }
-.track { width: 100%; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
-.track > div { height: 100%; width: 0; background: var(--accent); transition: width .3s linear; }
+.track { width: 100%; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+.track > div { height: 100%; width: 0; background: var(--accent); box-shadow: 0 0 12px var(--accent); transition: width .3s linear; }
 .meta { width: 100%; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .meta b { color: var(--ink); font-weight: 700; }
 
-.buttons { display: flex; gap: 10px; width: 100%; }
+.buttons { display: flex; gap: 10px; width: 100%; max-width: 460px; }
 button { font: inherit; cursor: pointer; }
 button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline: 3px solid var(--lymph); outline-offset: 2px; }
-.primary { flex: 1; border: 0; border-radius: 999px; padding: 14px 20px; background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 17px; }
-.ghost { border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 999px; padding: 14px 20px; }
+.primary { flex: 1; border: 0; border-radius: 999px; padding: 15px 22px; background: linear-gradient(180deg, #b4f5f2, var(--accent)); color: var(--accent-ink); font-weight: 700; font-size: 17px; box-shadow: 0 8px 28px rgba(134, 230, 226, 0.35); }
+.ghost { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 15px 22px; }
 .ghost:disabled { opacity: .45; cursor: default; }
 
 .panel { display: grid; gap: 22px; min-width: 0; }
 .group { display: grid; gap: 10px; }
-.group h2 { margin: 0; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.group h2 { margin: 0; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
 .chips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.chip { text-align: left; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 12px; padding: 10px 12px; display: grid; gap: 1px; }
+.chip { text-align: left; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 14px; padding: 10px 12px; display: grid; gap: 1px; }
 .chip strong { font-size: 15px; }
 .chip small { color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
-.chip[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.chip[aria-pressed="true"] { border-color: var(--accent); background: var(--surface-2); box-shadow: 0 0 0 1px var(--accent), 0 0 20px rgba(134, 230, 226, 0.25); }
 .about { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; display: grid; gap: 6px; }
 .about h3 { margin: 0; font-size: 16px; }
 .about h3 small { font-weight: 400; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
@@ -94,21 +95,19 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
 .chip:disabled { opacity: .55; cursor: default; }
 
 .steppers { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.stepper { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 8px 6px; display: grid; gap: 4px; justify-items: center; }
+.stepper { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 8px 6px; display: grid; gap: 4px; justify-items: center; }
 .stepper label { font-size: 12px; color: var(--muted); }
 .stepper .val { font-family: var(--display); font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
 .stepper .val small { font-size: 12px; font-weight: 500; color: var(--muted); }
 .stepper .row { display: flex; gap: 6px; }
-.stepper button { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--ink); font-size: 18px; line-height: 1; }
-.stepper button:disabled { opacity: .4; cursor: default; }
+.stepper button { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); font-size: 18px; line-height: 1; }
+.stepper button:disabled { opacity: .35; cursor: default; }
 .rate { font-size: 13px; color: var(--muted); }
-.rate b { color: var(--ink); }
 
 .seg { display: flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: var(--surface); }
 .seg button { flex: 1; border: 0; background: transparent; color: var(--ink); padding: 10px 0; font-variant-numeric: tabular-nums; }
 .seg button + button { border-left: 1px solid var(--line); }
 .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
-.seg button:disabled { opacity: .55; cursor: default; }
 
 .toggles { display: flex; flex-wrap: wrap; gap: 8px; }
 .toggle { position: relative; display: inline-flex; }
@@ -119,72 +118,89 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
 .bells { display: grid; gap: 6px; }
 .bells p { margin: 0; font-size: 13.5px; color: var(--muted); }
 .bells p.small { font-size: 12.5px; }
-.bell { display: flex; align-items: center; gap: 12px; text-align: left; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 12px; padding: 8px 12px; font-size: 14px; }
+.bell { display: flex; align-items: center; gap: 12px; text-align: left; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 14px; padding: 8px 12px; font-size: 14px; }
 .bell b { display: block; font-size: 14.5px; }
 .bell .pip { flex: none; width: 28px; height: 22px; fill: var(--lymph); }
-.bell.ring { border-color: var(--lymph); }
-.install { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; font-size: 14px; }
+.bell.ring { border-color: var(--lymph); box-shadow: 0 0 18px rgba(255, 210, 122, 0.3); }
+.install { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 12px 14px; font-size: 14px; }
 .install p { margin: 0; flex: 1 1 220px; min-width: 0; color: var(--muted); }
 .install p b { color: var(--ink); }
 .install .primary { flex: none; padding: 10px 18px; font-size: 15px; }
 .week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; align-items: end; height: 96px; }
 .day { display: grid; grid-template-rows: auto 1fr auto; height: 100%; justify-items: center; gap: 3px; font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .day .bar { width: 100%; max-width: 30px; align-self: end; background: var(--line); border-radius: 4px 4px 2px 2px; min-height: 3px; }
-.day.has .bar { background: var(--accent); }
+.day.has .bar { background: var(--accent); box-shadow: 0 0 10px rgba(134, 230, 226, 0.4); }
 .day.today { color: var(--ink); font-weight: 700; }
 .weeknote { font-size: 13px; color: var(--muted); margin: 0; }
 
-.benefits { display: grid; gap: 16px; border-top: 1px solid var(--line); padding-top: 24px; }
+.inside { display: grid; gap: 20px; align-items: center; grid-template-columns: 1fr; }
+@media (min-width: 700px) { .inside { grid-template-columns: minmax(0, 300px) 1fr; } }
+#fig { width: 100%; max-width: 300px; aspect-ratio: 1; display: block; margin: 0 auto; }
+.inside h2, .benefits h2 { font-family: var(--display); font-size: clamp(22px, 4vw, 28px); line-height: 1.15; margin: 0 0 8px; text-wrap: balance; }
+.inside p { margin: 0 0 10px; max-width: 60ch; }
+.inside .small { font-size: 14px; color: var(--muted); }
+
+.benefits { display: grid; gap: 16px; }
 .benefits > header { display: grid; gap: 6px; max-width: 64ch; }
-.benefits h2 { font-family: var(--display); font-size: clamp(22px, 4vw, 28px); line-height: 1.15; margin: 0; text-wrap: balance; }
 .benefits > header p { margin: 0; color: var(--muted); }
 .key { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 13px; color: var(--muted); align-items: center; }
 .cards { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); }
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 16px 18px; display: grid; gap: 6px; align-content: start; min-width: 0; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
 .card h3 { margin: 0; font-size: 16.5px; line-height: 1.3; text-wrap: balance; }
 .card p { margin: 0; font-size: 14.5px; }
 .card .when { font-size: 13px; color: var(--muted); }
 .ev { justify-self: start; font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; border-radius: 999px; padding: 3px 9px; border: 1px solid transparent; }
 .ev.strong { background: var(--accent); color: var(--accent-ink); }
-.ev.good { background: var(--lymph); color: var(--bg); }
+.ev.good { background: var(--lymph); color: var(--accent-ink); }
 .ev.early { border-color: var(--muted); color: var(--muted); }
 .card.not { background: transparent; border-style: dashed; grid-column: 1 / -1; }
 .card.not p { max-width: 80ch; }
-.guide { display: grid; gap: 18px; grid-template-columns: 1fr; border-top: 1px solid var(--line); padding-top: 24px; }
+.guide { display: grid; gap: 22px; grid-template-columns: 1fr; }
 @media (min-width: 860px) { .guide { grid-template-columns: 1.1fr 1fr 1fr; gap: 28px; } }
 .guide section { min-width: 0; }
 .guide h2 { font-family: var(--display); font-size: 20px; margin: 0 0 8px; text-wrap: balance; }
-.guide p, .guide li { color: var(--ink); max-width: 62ch; }
+.guide p, .guide li { max-width: 62ch; }
 .guide p { margin: 0 0 10px; }
 .guide ol, .guide ul { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
 .guide .care h2 { color: var(--warn); }
 .term { color: var(--lymph); font-weight: 700; }
 
+/* focus mode: while breathing, only the orb, the words and the wave */
+body.focus .hide-focus { display: none !important; }
+body.focus .app { grid-template-columns: 1fr; }
+body.focus .wrap { max-width: 620px; }
+body.focus .stage { min-height: calc(100dvh - 92px); align-content: center; }
+body.focus .orbwrap { max-width: min(460px, 54vh); }
+
 @media (prefers-reduced-motion: reduce) { .track > div { transition: none; } }
 </style>
+
+<canvas id="sea" aria-hidden="true"></canvas>
 </head>
 <body>
 <div class="wrap">
-  <header>
+  <header class="top hide-focus">
     <div class="eyebrow">Diaphragmatic breathing</div>
     <h1>Lymph Pump Breathing</h1>
     <p>Slow belly breaths, paced for you. Each breath moves the diaphragm down and up, and that pressure change helps push lymph up the thoracic duct towards the neck.</p>
   </header>
 
-  <div class="install" id="install" hidden>
+  <div class="install glass hide-focus" id="install" hidden>
     <p id="install-text"><b>Keep it on your phone.</b> Install it to open from your home screen, and use it without the internet.</p>
     <button class="primary" type="button" id="install-btn" hidden>Install</button>
   </div>
 
   <div class="app">
     <section class="stage" aria-label="Breathing guide">
-      <canvas id="fig" width="400" height="400" role="img" aria-label="A torso with lungs, the diaphragm and the thoracic duct. The diaphragm lowers as you breathe in and lymph moves upward."></canvas>
-      <canvas id="wave" aria-hidden="true"></canvas>
+      <div class="orbwrap">
+        <canvas id="orb" role="img" aria-label="A glowing orb that grows as you breathe in and shrinks as you breathe out."></canvas>
+        <div class="count" id="count" aria-hidden="true"></div>
+      </div>
       <div class="cue" aria-live="polite">
         <div class="phase" id="phase">Ready when you are</div>
-        <div class="count" id="count"></div>
         <p class="hint" id="hint">Sit or lie with knees bent. One hand on your chest, one on your belly.</p>
       </div>
+      <canvas id="wave" aria-hidden="true"></canvas>
       <div class="track" aria-hidden="true"><div id="bar"></div></div>
       <div class="meta">
         <span>Time left <b id="left">5:00</b></span>
@@ -197,7 +213,7 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
       </div>
     </section>
 
-    <div class="panel">
+    <div class="panel glass hide-focus">
       <div class="group">
         <h2>Pattern</h2>
         <div class="chips" id="presets"></div>
@@ -242,7 +258,17 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
     </div>
   </div>
 
-  <section class="benefits" aria-labelledby="benefits-h">
+  <section class="inside glass hide-focus" aria-labelledby="inside-h">
+    <canvas id="fig" width="400" height="400" role="img" aria-label="A torso with lungs, the diaphragm and the thoracic duct. The diaphragm lowers as you breathe in and lymph moves upward."></canvas>
+    <div>
+      <h2 id="inside-h">Inside you, right now</h2>
+      <p>This moves in time with the orb. As you breathe in, your <span class="term">diaphragm</span> (the band under the lungs) flattens and drops. Pressure in your belly rises and pressure in your chest falls.</p>
+      <p>That squeeze pushes lymph, the golden dots, out of the <span class="term">cisterna chyli</span> in your belly and up the <span class="term">thoracic duct</span>. At the base of your neck it empties into a vein and rejoins your blood.</p>
+      <p class="small">The dots speed up whenever the diaphragm moves. That is the pump this app is named after.</p>
+    </div>
+  </section>
+
+  <section class="benefits hide-focus" aria-labelledby="benefits-h">
     <header>
       <h2 id="benefits-h">What slow breathing does for your body</h2>
       <p>Lymph flow is one benefit of this practice. Here are the others, with a label showing how strong the evidence is for each.</p>
@@ -262,7 +288,7 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
     </div>
   </section>
 
-  <div class="guide">
+  <div class="guide glass hide-focus">
     <section>
       <h2>How to do it</h2>
       <ol>
@@ -332,7 +358,7 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
   const S = store.s;
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} };
 
-  let running = false, started = false, elapsed = 0, lastT = 0, lastP = 0;
+  let running = false, started = false, elapsed = 0, lastT = 0, lastP = 0, phaseFrac = 0;
   let cur = 'inh', curStart = 0, curDur = 4000, cycles = 0;
   const ORDER = ['inh', 'hold', 'exh', 'rest'];
   const nextPhase = nm => { const i = ORDER.indexOf(nm); for (let k = 1; k <= 4; k++) { const n = ORDER[(i + k) % 4]; if (S[n] > 0) return n; } return 'inh'; };
@@ -573,18 +599,19 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
     if (fresh) { elapsed = 0; cur = 'inh'; curStart = 0; curDur = S.inh * 1000; cycles = 0; started = true; }
     running = true; lastT = performance.now();
     enter(cur, '', curDur - (elapsed - curStart));
+    document.body.classList.add('focus'); window.scrollTo(0, 0);
     if (S.tone) toneStart();
     if (S.water) waterOn();
     lockScreen(); render();
   }
   function pause() {
-    running = false; toneStop(); waterOff(); unlockScreen();
+    running = false; toneStop(); waterOff(); unlockScreen(); document.body.classList.remove('focus');
     try { speechSynthesis.cancel(); } catch (e) {}
     $('phase').textContent = 'Paused'; $('count').textContent = ''; $('hint').textContent = 'Breathe normally. Resume when ready.';
     render();
   }
   function reset(done) {
-    running = false; started = false; toneStop(); waterOff(); unlockScreen();
+    running = false; started = false; phaseFrac = 0; toneStop(); waterOff(); unlockScreen(); document.body.classList.remove('focus');
     try { speechSynthesis.cancel(); } catch (e) {}
     $('phase').textContent = done ? 'Well done' : 'Ready when you are';
     $('count').textContent = '';
@@ -602,6 +629,7 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
   }
   $('go').onclick = () => (running ? pause() : start());
   $('reset').onclick = () => reset(0);
+  addEventListener('keydown', e => { if (e.key === 'Escape' && running) pause(); });
   document.addEventListener('visibilitychange', () => { if (document.hidden && running) pause(); });
 
   function enter(name, finished, msLeft) {
@@ -621,7 +649,7 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
       }
       if (ended) finish();
       else {
-        const frac = (elapsed - curStart) / curDur;
+        const frac = (elapsed - curStart) / curDur; phaseFrac = frac;
         p = cur === 'inh' ? ease(frac) : cur === 'hold' ? 1 : cur === 'exh' ? 1 - ease(frac) : 0;
         $('count').textContent = Math.ceil((curDur - (elapsed - curStart)) / 1000);
         $('left').textContent = fmt(total - elapsed);
@@ -629,6 +657,7 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
         $('bar').style.width = Math.min(100, elapsed / total * 100).toFixed(2) + '%';
       }
     }
+    if (!started) p = 0.3 + 0.12 * (0.5 + 0.5 * Math.sin(now / 1700)); // a slow idle breath before you start
     draw(now);
     drawWave();
     requestAnimationFrame(tick);
@@ -675,7 +704,9 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
     line(0, nowX); wctx.lineTo(nowX, bottom + 4); wctx.lineTo(0, bottom + 4); wctx.closePath();
     wctx.fillStyle = colors.accent; wctx.globalAlpha = 0.1; wctx.fill(); wctx.globalAlpha = 1;
     wctx.lineWidth = 2.5; wctx.lineJoin = 'round'; wctx.lineCap = 'round'; wctx.strokeStyle = colors.accent;
+    wctx.shadowColor = colors.accent; wctx.shadowBlur = 10;
     line(0, nowX); wctx.stroke();
+    wctx.shadowBlur = 0;
     wctx.globalAlpha = 0.35; line(Math.floor(nowX / 2) * 2, W); wctx.stroke(); wctx.globalAlpha = 1;
     // now
     const ny = yOf(stateAt(tNow));
@@ -689,13 +720,105 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
   function readColors(now) {
     if (now - colorsAt < 500) return; colorsAt = now;
     const cs = getComputedStyle(document.documentElement);
-    for (const k of ['surface', 'ink', 'muted', 'line', 'accent', 'lymph', 'bg']) colors[k] = cs.getPropertyValue('--' + k).trim();
+    for (const k of ['surface', 'ink', 'muted', 'line', 'accent', 'lymph', 'bodyfill']) colors[k] = cs.getPropertyValue('--' + k).trim();
   }
-  function fit() {
-    const w = cv.clientWidth || 380, dpr = Math.min(2, window.devicePixelRatio || 1);
-    cv.width = Math.round(w * dpr); cv.height = Math.round(w * dpr);
+  const ov = $('orb'), octx = ov.getContext('2d');
+  function fitSquare(c) { const w = c.clientWidth || 360, dpr = Math.min(2, window.devicePixelRatio || 1); c.width = Math.round(w * dpr); c.height = c.width; }
+  for (const c of [cv, ov]) { new ResizeObserver(() => fitSquare(c)).observe(c); fitSquare(c); }
+
+  // ---------- the orb: swells on the in-breath; a gold ring traces the current step ----------
+  const TAU = Math.PI * 2;
+  const bubbles = Array.from({ length: 16 }, () => ({ x: 70 + Math.random() * 260, y: Math.random() * 400, r: 1.5 + Math.random() * 3, s: 0.6 + Math.random() * 0.8 }));
+  function drawOrb(dt, dp) {
+    const k = ov.width / 400; if (!k) return;
+    octx.setTransform(k, 0, 0, k, 0, 0); octx.clearRect(0, 0, 400, 400);
+    const cx = 200, cy = 200, r = 76 + 88 * p;
+    let g = octx.createRadialGradient(cx, cy, r * 0.55, cx, cy, 199);
+    g.addColorStop(0, 'rgba(134,230,226,0.40)'); g.addColorStop(0.5, 'rgba(134,230,226,0.10)'); g.addColorStop(1, 'rgba(134,230,226,0)');
+    octx.fillStyle = g; octx.fillRect(0, 0, 400, 400);
+    octx.lineWidth = 2; octx.strokeStyle = 'rgba(255,255,255,0.13)'; octx.beginPath(); octx.arc(cx, cy, 188, 0, TAU); octx.stroke();
+    if (started) {
+      octx.strokeStyle = colors.lymph; octx.lineWidth = 3.5; octx.lineCap = 'round';
+      octx.shadowColor = colors.lymph; octx.shadowBlur = 10;
+      octx.beginPath(); octx.arc(cx, cy, 188, -Math.PI / 2, -Math.PI / 2 + TAU * Math.min(1, Math.max(0.001, phaseFrac))); octx.stroke();
+      octx.shadowBlur = 0;
+    }
+    for (const b of bubbles) {
+      b.y -= (14 + 90 * dp) * b.s * dt;
+      if (b.y < 10) { b.y = 395; b.x = 70 + Math.random() * 260; }
+      const a = Math.max(0, Math.min(1, (395 - b.y) / 60, b.y / 80)) * 0.45;
+      octx.strokeStyle = `rgba(220,250,255,${a.toFixed(3)})`; octx.lineWidth = 1.2;
+      octx.beginPath(); octx.arc(b.x + Math.sin(b.y / 23 + b.s * 9) * 6, b.y, b.r, 0, TAU); octx.stroke();
+    }
+    g = octx.createRadialGradient(cx - r * 0.35, cy - r * 0.4, r * 0.05, cx, cy, r);
+    g.addColorStop(0, 'rgba(255,255,255,0.96)'); g.addColorStop(0.3, 'rgba(196,248,246,0.9)');
+    g.addColorStop(0.75, 'rgba(96,200,210,0.66)'); g.addColorStop(1, 'rgba(50,140,170,0.5)');
+    octx.fillStyle = g; octx.beginPath(); octx.arc(cx, cy, r, 0, TAU); octx.fill();
+    octx.save(); octx.beginPath(); octx.arc(cx, cy, r, 0, TAU); octx.clip();
+    const tt = performance.now() / 1000;
+    for (let i = 0; i < 3; i++) {
+      const an = tt * 0.3 + i * 2.1, x = cx + Math.cos(an) * r * 0.45, y = cy + Math.sin(an * 1.3) * r * 0.4;
+      const sg = octx.createRadialGradient(x, y, 0, x, y, r * 0.6);
+      sg.addColorStop(0, 'rgba(255,255,255,0.16)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
+      octx.fillStyle = sg; octx.fillRect(cx - r, cy - r, 2 * r, 2 * r);
+    }
+    octx.restore();
+    octx.lineWidth = 1.5; octx.strokeStyle = 'rgba(255,255,255,0.55)'; octx.beginPath(); octx.arc(cx, cy, r, 0, TAU); octx.stroke();
   }
-  new ResizeObserver(fit).observe(cv); fit();
+
+  // ---------- the sea: light ripples and sun rays, drawn on the GPU, brightening a little on each in-breath ----------
+  (function sea() {
+    const c = $('sea'); let gl = null;
+    try { gl = c.getContext('webgl', { antialias: false, alpha: false, depth: false, powerPreference: 'low-power' }); } catch (e) {}
+    if (!gl) { c.hidden = true; return; }
+    const VS = 'attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}';
+    const FS = `precision mediump float;
+uniform vec2 res; uniform float t; uniform float b;
+float field(vec2 p, float t) {
+  p += 0.7 * vec2(sin(p.y * 0.8 + t * 0.35), cos(p.x * 0.7 - t * 0.3));
+  return sin(p.x + t * 0.4) + sin(p.y * 1.3 - t * 0.33) + sin((p.x + p.y) * 0.7 + t * 0.27) + sin(length(p - vec2(3.0, 2.0)) * 1.2 - t * 0.5);
+}
+float caust(vec2 p, float t) {
+  float a = 1.0 - smoothstep(0.0, 0.3, abs(field(p, t)));
+  float c = 1.0 - smoothstep(0.0, 0.3, abs(field(p * 1.7 + 4.0, t * 1.2)));
+  return a * 0.65 + c * 0.35;
+}
+void main() {
+  vec2 uv = gl_FragCoord.xy / res;
+  float asp = res.x / res.y;
+  vec2 p = vec2(uv.x * asp, uv.y) * 3.2;
+  vec3 col = mix(vec3(0.035, 0.15, 0.25), vec3(0.09, 0.39, 0.48), smoothstep(0.0, 1.0, uv.y));
+  col += vec3(0.55, 0.95, 1.0) * caust(p, t) * (0.04 + 0.12 * uv.y) * (0.8 + 0.4 * b);
+  vec2 q = vec2((uv.x - 0.5) * asp - 0.15 * sin(t * 0.04), uv.y - 1.25);
+  float ang = atan(q.x, -q.y);
+  float rays = 0.5 + 0.5 * sin(ang * 11.0 + t * 0.12) * sin(ang * 6.3 - t * 0.09 + 1.3);
+  col += vec3(0.6, 0.95, 1.0) * pow(rays, 4.0) * smoothstep(0.15, 1.0, uv.y) * (0.07 + 0.06 * b);
+  col *= 0.92 + 0.12 * b;
+  gl_FragColor = vec4(col, 1.0);
+}`;
+    const sh = (type, src) => { const o = gl.createShader(type); gl.shaderSource(o, src); gl.compileShader(o); return gl.getShaderParameter(o, gl.COMPILE_STATUS) ? o : null; };
+    const v = sh(gl.VERTEX_SHADER, VS), f = sh(gl.FRAGMENT_SHADER, FS);
+    if (!v || !f) { c.hidden = true; return; }
+    const prog = gl.createProgram(); gl.attachShader(prog, v); gl.attachShader(prog, f); gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { c.hidden = true; return; }
+    gl.useProgram(prog);
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'a'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    const uRes = gl.getUniformLocation(prog, 'res'), uT = gl.getUniformLocation(prog, 't'), uB = gl.getUniformLocation(prog, 'b');
+    const size = () => { const w = Math.max(1, Math.round(innerWidth * 0.5)), h = Math.max(1, Math.round(innerHeight * 0.5)); if (c.width !== w || c.height !== h) { c.width = w; c.height = h; gl.viewport(0, 0, w, h); } };
+    addEventListener('resize', size); size();
+    const slow = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let last = -1e9, sb = 0.3; const t0 = performance.now();
+    function frame(now) {
+      requestAnimationFrame(frame);
+      if (document.hidden || now - last < 33) return; // about 30 frames a second is plenty for water
+      last = now; sb += (p - sb) * 0.12; size();
+      gl.uniform2f(uRes, c.width, c.height); gl.uniform1f(uT, (now - t0) / 1000 * (slow ? 0.15 : 1)); gl.uniform1f(uB, sb);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
+    requestAnimationFrame(frame);
+  })();
 
   const duct = [[200, 268], [207, 175], [194, 104], [254, 86]];
   const bez = t => { const u = 1 - t; const [a, b, c, d] = duct;
@@ -707,6 +830,7 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
     readColors(now);
     const dt = Math.min(0.1, (now - (lastDraw || now)) / 1000); lastDraw = now;
     const dp = dt > 0 ? Math.abs(p - lastP) / dt : 0; lastP = p;
+    drawOrb(dt, dp);
     const k = cv.width / 400;
     ctx.setTransform(k, 0, 0, k, 0, 0);
     ctx.clearRect(0, 0, 400, 400);
@@ -724,7 +848,7 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
     ctx.bezierCurveTo(288 + bx, 240, 308 + rx, 200, 312 + rx, 140);
     ctx.quadraticCurveTo(316 + rx, 92, 290, 84);
     ctx.quadraticCurveTo(244, 76, 244, 44);
-    ctx.fillStyle = colors.bg; ctx.fill();
+    ctx.fillStyle = colors.bodyfill; ctx.fill();
     ctx.lineWidth = 2; ctx.strokeStyle = colors.line; ctx.stroke();
 
     // lungs
