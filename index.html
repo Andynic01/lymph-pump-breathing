@@ -112,9 +112,7 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
 .bells p.small { font-size: 12.5px; }
 .bell { display: flex; align-items: center; gap: 12px; text-align: left; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 12px; padding: 8px 12px; font-size: 14px; }
 .bell b { display: block; font-size: 14.5px; }
-.bell .pip { flex: none; width: 22px; height: 22px; position: relative; }
-.bell .pip::before { content: ""; position: absolute; left: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--lymph); top: calc(18px - var(--h) * 6px); }
-.bell .pip::after { content: ""; position: absolute; left: 2px; right: 2px; bottom: 0; height: 2px; border-radius: 1px; background: var(--line); }
+.bell .pip { flex: none; width: 28px; height: 22px; fill: var(--lymph); }
 .bell.ring { border-color: var(--lymph); }
 .install { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; font-size: 14px; }
 .install p { margin: 0; flex: 1 1 220px; min-width: 0; color: var(--muted); }
@@ -200,10 +198,10 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
         </div>
         <div class="bells" id="bells">
           <p>With chimes on you can close your eyes. Each bell tells you a step has finished and what to do next. Tap one to hear it.</p>
-          <button type="button" class="bell" id="bell-inh" data-bell="inh"><i class="pip" style="--h:3"></i><span><b>High bell</b> In-breath done. Hold, or breathe out.</span></button>
-          <button type="button" class="bell" id="bell-hold" data-bell="hold"><i class="pip" style="--h:2"></i><span><b>Middle bell</b> Hold done. Breathe out.</span></button>
-          <button type="button" class="bell" id="bell-exh" data-bell="exh"><i class="pip" style="--h:1"></i><span><b>Low bell</b> Out-breath done. Breathe in.</span></button>
-          <p class="small">The low bell also starts the session, and three falling bells end it. On an iPhone, turn the silent switch off to hear them.</p>
+          <button type="button" class="bell" id="bell-inh" data-bell="inh"><svg class="pip" viewBox="0 0 28 22" aria-hidden="true"><circle cx="14" cy="6" r="3.5"/></svg><span><b>Bright ting</b> In-breath done. Hold, or breathe out.</span></button>
+          <button type="button" class="bell" id="bell-hold" data-bell="hold"><svg class="pip" viewBox="0 0 28 22" aria-hidden="true"><circle cx="8" cy="13" r="3.5"/><circle cx="20" cy="9" r="3.5"/></svg><span><b>Two soft wooden notes</b> Hold done. Breathe out.</span></button>
+          <button type="button" class="bell" id="bell-exh" data-bell="exh"><svg class="pip" viewBox="0 0 28 22" aria-hidden="true"><ellipse cx="14" cy="15" rx="10" ry="5.5"/></svg><span><b>Deep gong</b> Out-breath done. Breathe in.</span></button>
+          <p class="small">The gong also starts the session, and all three play in a row to end it. On an iPhone, turn the silent switch off to hear them.</p>
         </div>
       </div>
 
@@ -366,20 +364,32 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
     } catch (e) { ac = null; }
     return ac;
   }
-  // a soft singing-bowl strike: a pure note, a quieter inharmonic overtone, long gentle fade
-  const BELLS = { inh: 659.3, hold: 523.3, exh: 392.0, rest: 392.0 };
+  // three sounds that differ in kind and rhythm, not just pitch, so they're easy to tell apart with eyes closed
+  //   inh  -> one bright, high "ting" (small glass bell)
+  //   hold -> two soft wooden notes, rising (marimba)
+  //   exh  -> one deep, slow-blooming gong with a gentle wobble (singing bowl)
+  function voice(t, partials, peak, attack, decay, level) {
+    const out = ac.createGain(); out.connect(ac.destination);
+    out.gain.setValueAtTime(0.0001, t);
+    out.gain.linearRampToValueAtTime(peak * level, t + attack);
+    out.gain.exponentialRampToValueAtTime(0.0005, t + attack + decay);
+    for (const [f, amp] of partials) {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = 'sine'; o.frequency.value = f; g.gain.value = amp;
+      o.connect(g).connect(out); o.start(t); o.stop(t + attack + decay + 0.1);
+    }
+  }
   function bell(name, when = 0, level = 1) {
     if (!audio()) return;
     try {
-      const f = BELLS[name] || 392, t = ac.currentTime + 0.02 + when;
-      const out = ac.createGain(); out.connect(ac.destination);
-      out.gain.setValueAtTime(0, t);
-      out.gain.linearRampToValueAtTime(0.22 * level, t + 0.012);
-      out.gain.exponentialRampToValueAtTime(0.0008, t + 3.2);
-      for (const [mult, amp] of [[1, 1], [2.76, 0.18], [5.4, 0.05]]) {
-        const o = ac.createOscillator(), g = ac.createGain();
-        o.type = 'sine'; o.frequency.value = f * mult; g.gain.value = amp;
-        o.connect(g).connect(out); o.start(t); o.stop(t + 3.3);
+      const t = ac.currentTime + 0.02 + when;
+      if (name === 'inh') {
+        voice(t, [[1318.5, 1], [2637, 0.25], [3633, 0.08]], 0.16, 0.004, 1.8, level);
+      } else if (name === 'hold') {
+        voice(t,        [[523.3, 1], [2093, 0.12]], 0.24, 0.006, 0.55, level);
+        voice(t + 0.28, [[659.3, 1], [2637, 0.12]], 0.24, 0.006, 0.7, level);
+      } else {
+        voice(t, [[146.8, 0.8], [148.3, 0.6], [293.7, 0.5], [295.4, 0.35], [398, 0.3], [705, 0.08]], 0.26, 0.09, 4.5, level);
       }
     } catch (e) {}
   }
@@ -449,7 +459,7 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
     const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 60);
     for (const d of Object.keys(store.log)) if (d < dayKey(cutoff)) delete store.log[d];
     save();
-    if (S.chime) { bell('inh', 0); bell('hold', 0.7); bell('exh', 1.4); }
+    if (S.chime) { bell('inh', 0); bell('hold', 1.1); bell('exh', 2.3); }
     reset(endAt);
   }
   $('go').onclick = () => (running ? pause() : start());
