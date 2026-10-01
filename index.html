@@ -85,6 +85,12 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
 .chip strong { font-size: 15px; }
 .chip small { color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
 .chip[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.about { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; display: grid; gap: 6px; }
+.about h3 { margin: 0; font-size: 16px; }
+.about h3 small { font-weight: 400; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.about p { margin: 0; font-size: 14.5px; }
+.about .for { color: var(--muted); font-size: 13.5px; }
+.about .for b { color: var(--ink); }
 .chip:disabled { opacity: .55; cursor: default; }
 
 .steppers { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
@@ -195,12 +201,13 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
       <div class="group">
         <h2>Pattern</h2>
         <div class="chips" id="presets"></div>
+        <div class="about" id="about" aria-live="polite"></div>
       </div>
 
       <div class="group">
         <h2>Seconds per step</h2>
         <div class="steppers" id="steppers"></div>
-        <div class="rate">Aim for a breath that feels unhurried. Shorten the numbers if you feel short of air.</div>
+        <div class="rate">Aim for a breath that feels unhurried. Shorten the numbers if you feel short of air. You can change these during a session; the change starts from the next step.</div>
       </div>
 
       <div class="group">
@@ -300,6 +307,17 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
     { key: 'rest', label: 'Rest', min: 0, max: 7 },
   ];
   const LENGTHS = [3, 5, 10, 15];
+  // what each pattern does for the body, shown under the pattern buttons
+  const ABOUT = {
+    pump: ['Built for lymph flow. The deep 4-second in-breath drops the diaphragm all the way, squeezing the belly and pushing lymph up towards the chest. The soft 2-second hold gives that pressure change a moment before you let go. The long 6-second out-breath lets the diaphragm rise slowly, ready for the next push. At 5 breaths a minute it also calms the nervous system.',
+           'your daily lymph routine, mornings, and after sitting still for a long time.'],
+    gentle: ['Shorter, easier breaths. It still uses the belly and still has a longer out-breath, which tips the body towards calm, but it asks much less of your lungs. Move up to Lymph pump once this feels easy.',
+             'learning the technique, tired or unwell days, and anyone who gets light-headed or short of breath.'],
+    even: ['Equal in and out at 6 breaths a minute, often called resonance or coherent breathing. At about this rate the rhythms of your heart and blood pressure line up with your breath. That gives the biggest healthy swing in heart rate, a sign of a relaxed nervous system. Heart-rate biofeedback studies use this rate.',
+           'steady calm, focus, and settling yourself before something stressful.'],
+    longout: ['The out-breath is twice as long as the in-breath. Your heart naturally slows on every out-breath, so stretching it out leans hardest towards "rest and digest". If 8 seconds feels like a strain, use 3 in and 6 out.',
+              'winding down in the evening, before sleep, and anxious moments.'],
+  };
   const WORDS = {
     inh:  ['Breathe in',  'Through the nose. Belly rises, chest stays still.'],
     hold: ['Hold',        'A soft pause at the top. No straining.'],
@@ -314,7 +332,12 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
   const S = store.s;
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} };
 
-  let running = false, started = false, elapsed = 0, endAt = 0, lastT = 0, lastPhaseId = '', lastPhase = '', lastP = 0;
+  let running = false, started = false, elapsed = 0, lastT = 0, lastP = 0;
+  let cur = 'inh', curStart = 0, curDur = 4000, cycles = 0;
+  const ORDER = ['inh', 'hold', 'exh', 'rest'];
+  const nextPhase = nm => { const i = ORDER.indexOf(nm); for (let k = 1; k <= 4; k++) { const n = ORDER[(i + k) % 4]; if (S[n] > 0) return n; } return 'inh'; };
+  // where we are in the current pattern's cycle, in ms (used by the wave)
+  const posNow = () => { let off = 0; for (const n of ORDER) { if (n === cur) break; off += S[n] * 1000; } return off + Math.min(elapsed - curStart, Math.max(0, S[cur] * 1000 - 1)); };
   let p = 0.35; // 0 = fully out, 1 = fully in
 
   const $ = id => document.getElementById(id);
@@ -367,7 +390,7 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
   if (!('speechSynthesis' in window)) $('cue-voice').closest('label').hidden = true;
 
   function render() {
-    const lock = running;
+    const lock = false; // everything can change mid-session; it takes effect from the next step
     for (const b of presetBox.children) { b.setAttribute('aria-pressed', String(b.dataset.id === S.preset)); b.disabled = lock; }
     for (const st of STEPS) {
       $('val-' + st.key).innerHTML = S[st.key] + '<small>s</small>';
@@ -376,6 +399,11 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
     }
     for (const b of lenBox.children) { b.setAttribute('aria-pressed', String(b.id === 'len-' + S.mins)); b.disabled = lock; }
     const bpm = 60000 / cycleMs();
+    const rate = (Number.isInteger(bpm) ? bpm : bpm.toFixed(1)) + ' breaths a minute';
+    const pr = PRESETS[S.preset], ab = ABOUT[S.preset];
+    $('about').innerHTML = pr
+      ? `<h3>${pr.name} <small>· ${rate}</small></h3><p>${ab[0]}</p><p class="for"><b>Good for:</b> ${ab[1]}</p>`
+      : `<h3>Your own pattern <small>· ${S.inh} in${S.hold ? ' · ' + S.hold + ' hold' : ''} · ${S.exh} out${S.rest ? ' · ' + S.rest + ' rest' : ''} · ${rate}</small></h3><p>Keep every step comfortable. Around 5 or 6 breaths a minute, with an out-breath at least as long as the in-breath, gives the calming and lymph-moving effects. If you feel light-headed, shorten the steps.</p>`;
     $('bpm').textContent = Number.isInteger(bpm) ? bpm : bpm.toFixed(1);
     if (!started) { $('left').textContent = fmt(S.mins * 60000); $('breaths').textContent = '0'; $('bar').style.width = '0'; }
     $('go').textContent = running ? 'Pause' : started ? 'Resume' : 'Start';
@@ -541,8 +569,10 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
   function start() {
     audio();
     if (S.chime && !started) bell('exh');
-    if (!started) { elapsed = 0; endAt = Math.ceil((S.mins * 60000) / cycleMs()) * cycleMs(); lastPhaseId = ''; lastPhase = ''; started = true; }
+    const fresh = !started;
+    if (fresh) { elapsed = 0; cur = 'inh'; curStart = 0; curDur = S.inh * 1000; cycles = 0; started = true; }
     running = true; lastT = performance.now();
+    enter(cur, '', curDur - (elapsed - curStart));
     if (S.tone) toneStart();
     if (S.water) waterOn();
     lockScreen(); render();
@@ -551,50 +581,52 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
     running = false; toneStop(); waterOff(); unlockScreen();
     try { speechSynthesis.cancel(); } catch (e) {}
     $('phase').textContent = 'Paused'; $('count').textContent = ''; $('hint').textContent = 'Breathe normally. Resume when ready.';
-    lastPhaseId = ''; lastPhase = ''; render();
+    render();
   }
   function reset(done) {
     running = false; started = false; toneStop(); waterOff(); unlockScreen();
     try { speechSynthesis.cancel(); } catch (e) {}
     $('phase').textContent = done ? 'Well done' : 'Ready when you are';
-    $('count').textContent = done ? fmt(done) + ' logged' : '';
-    $('hint').textContent = done ? 'Sit for a moment and breathe normally before you get up.' : 'Sit or lie with knees bent. One hand on your chest, one on your belly.';
+    $('count').textContent = '';
+    $('hint').textContent = done ? fmt(done) + ' logged. Sit for a moment and breathe normally before you get up.' : 'Sit or lie with knees bent. One hand on your chest, one on your belly.';
     render();
   }
   function finish() {
-    const mins = endAt / 60000; const k = dayKey(new Date());
+    const mins = elapsed / 60000; const k = dayKey(new Date());
     store.log[k] = (store.log[k] || 0) + mins;
     const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 60);
     for (const d of Object.keys(store.log)) if (d < dayKey(cutoff)) delete store.log[d];
     save();
     if (S.chime) { bell('inh', 0); bell('hold', 1.1, 1, 2.5); bell('exh', 2.3); }
-    reset(endAt);
+    reset(elapsed);
   }
   $('go').onclick = () => (running ? pause() : start());
   $('reset').onclick = () => reset(0);
   document.addEventListener('visibilitychange', () => { if (document.hidden && running) pause(); });
 
+  function enter(name, finished, msLeft) {
+    $('phase').textContent = WORDS[name][0]; $('hint').textContent = WORDS[name][1];
+    cue(name, msLeft / 1000, finished);
+  }
   function tick(now) {
     if (running) {
-      elapsed += Math.min(250, now - lastT); lastT = now;
-      if (elapsed >= endAt) { finish(); }
+      elapsed += Math.max(0, Math.min(250, now - lastT)); lastT = now;
+      const total = S.mins * 60000;
+      let ended = false;
+      while (elapsed - curStart >= curDur) {
+        const done = cur; curStart += curDur; cur = nextPhase(cur);
+        if (cur === 'inh') { cycles++; if (curStart >= total) { ended = true; break; } } // finish on a whole breath
+        curDur = S[cur] * 1000;
+        enter(cur, done, curDur - (elapsed - curStart));
+      }
+      if (ended) finish();
       else {
-        const cyc = cycleMs(); const n = Math.floor(elapsed / cyc); let pos = elapsed - n * cyc;
-        let name = 'inh', dur = 1, into = 0, i = 0;
-        for (const [nm, s] of phases()) { const ms = s * 1000; if (pos < ms) { name = nm; dur = ms; into = pos; break; } pos -= ms; i++; }
-        const frac = into / dur;
-        p = name === 'inh' ? ease(frac) : name === 'hold' ? 1 : name === 'exh' ? 1 - ease(frac) : 0;
-        const id = n + ':' + i;
-        if (id !== lastPhaseId) {
-          lastPhaseId = id;
-          $('phase').textContent = WORDS[name][0]; $('hint').textContent = WORDS[name][1];
-          cue(name, (dur - into) / 1000, lastPhase);
-          lastPhase = name;
-        }
-        $('count').textContent = Math.ceil((dur - into) / 1000);
-        $('left').textContent = fmt(endAt - elapsed);
-        $('breaths').textContent = n + (name === 'inh' ? 0 : 1);
-        $('bar').style.width = (elapsed / endAt * 100).toFixed(2) + '%';
+        const frac = (elapsed - curStart) / curDur;
+        p = cur === 'inh' ? ease(frac) : cur === 'hold' ? 1 : cur === 'exh' ? 1 - ease(frac) : 0;
+        $('count').textContent = Math.ceil((curDur - (elapsed - curStart)) / 1000);
+        $('left').textContent = fmt(total - elapsed);
+        $('breaths').textContent = cycles + (cur === 'inh' ? 0 : 1);
+        $('bar').style.width = Math.min(100, elapsed / total * 100).toFixed(2) + '%';
       }
     }
     draw(now);
@@ -622,7 +654,7 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
     const dpr = wv.width / (wv.clientWidth || 1), W = wv.width / dpr, H = wv.height / dpr;
     if (!W || !H) return;
     wctx.setTransform(dpr, 0, 0, dpr, 0, 0); wctx.clearRect(0, 0, W, H);
-    const cyc = cycleMs(), span = Math.max(cyc * 2.2, 18000), nowX = W * 0.32, tNow = started ? elapsed : 0;
+    const cyc = cycleMs(), span = Math.max(cyc * 2.2, 18000), nowX = W * 0.32, tNow = started ? posNow() : 0;
     const top = 14, bottom = H - 22, yOf = v => bottom - v * (bottom - top);
     const tAt = x => tNow + (x - nowX) / W * span;
     // phase names under each stretch of the line
