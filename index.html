@@ -200,8 +200,8 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
           <p>With chimes on you can close your eyes. Each bell tells you a step has finished and what to do next. Tap one to hear it.</p>
           <button type="button" class="bell" id="bell-inh" data-bell="inh"><svg class="pip" viewBox="0 0 28 22" aria-hidden="true"><circle cx="14" cy="6" r="3.5"/></svg><span><b>Bright ting</b> In-breath done. Hold, or breathe out.</span></button>
           <button type="button" class="bell" id="bell-hold" data-bell="hold"><svg class="pip" viewBox="0 0 28 22" aria-hidden="true"><circle cx="8" cy="13" r="3.5"/><circle cx="20" cy="9" r="3.5"/></svg><span><b>Two soft wooden notes</b> Hold done. Breathe out.</span></button>
-          <button type="button" class="bell" id="bell-exh" data-bell="exh"><svg class="pip" viewBox="0 0 28 22" aria-hidden="true"><ellipse cx="14" cy="15" rx="10" ry="5.5"/></svg><span><b>Deep gong</b> Out-breath done. Breathe in.</span></button>
-          <p class="small">The gong also starts the session, and all three play in a row to end it. On an iPhone, turn the silent switch off to hear them.</p>
+          <button type="button" class="bell" id="bell-exh" data-bell="exh"><svg class="pip" viewBox="0 0 28 22" aria-hidden="true"><circle cx="14" cy="15" r="5"/></svg><span><b>Soft low bell</b> Out-breath done. Breathe in.</span></button>
+          <p class="small">The soft low bell also starts the session, and all three play in a row to end it. On an iPhone, turn the silent switch off to hear them.</p>
         </div>
       </div>
 
@@ -367,7 +367,7 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
   // three sounds that differ in kind and rhythm, not just pitch, so they're easy to tell apart with eyes closed
   //   inh  -> one bright, high "ting" (small glass bell)
   //   hold -> two soft wooden notes, rising (marimba)
-  //   exh  -> one deep, slow-blooming gong with a gentle wobble (singing bowl)
+  //   exh  -> the same glass bell an octave lower, softer onset and a longer fade
   function voice(t, partials, peak, attack, decay, level) {
     const out = ac.createGain(); out.connect(ac.destination);
     out.gain.setValueAtTime(0.0001, t);
@@ -389,7 +389,7 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
         voice(t,        [[523.3, 1], [2093, 0.12]], 0.24, 0.006, 0.55, level);
         voice(t + 0.28, [[659.3, 1], [2637, 0.12]], 0.24, 0.006, 0.7, level);
       } else {
-        voice(t, [[146.8, 0.8], [148.3, 0.6], [293.7, 0.5], [295.4, 0.35], [398, 0.3], [705, 0.08]], 0.26, 0.09, 4.5, level);
+        voice(t, [[659.3, 1], [1318.5, 0.18], [1816, 0.05]], 0.17, 0.03, 3.2, level);
       }
     } catch (e) {}
   }
