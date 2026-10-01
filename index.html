@@ -125,6 +125,22 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
 .day.today { color: var(--ink); font-weight: 700; }
 .weeknote { font-size: 13px; color: var(--muted); margin: 0; }
 
+.benefits { display: grid; gap: 16px; border-top: 1px solid var(--line); padding-top: 24px; }
+.benefits > header { display: grid; gap: 6px; max-width: 64ch; }
+.benefits h2 { font-family: var(--display); font-size: clamp(22px, 4vw, 28px); line-height: 1.15; margin: 0; text-wrap: balance; }
+.benefits > header p { margin: 0; color: var(--muted); }
+.key { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 13px; color: var(--muted); align-items: center; }
+.cards { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.card h3 { margin: 0; font-size: 16.5px; line-height: 1.3; text-wrap: balance; }
+.card p { margin: 0; font-size: 14.5px; }
+.card .when { font-size: 13px; color: var(--muted); }
+.ev { justify-self: start; font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; border-radius: 999px; padding: 3px 9px; border: 1px solid transparent; }
+.ev.strong { background: var(--accent); color: var(--accent-ink); }
+.ev.good { background: var(--lymph); color: var(--bg); }
+.ev.early { border-color: var(--muted); color: var(--muted); }
+.card.not { background: transparent; border-style: dashed; grid-column: 1 / -1; }
+.card.not p { max-width: 80ch; }
 .guide { display: grid; gap: 18px; grid-template-columns: 1fr; border-top: 1px solid var(--line); padding-top: 24px; }
 @media (min-width: 860px) { .guide { grid-template-columns: 1.1fr 1fr 1fr; gap: 28px; } }
 .guide section { min-width: 0; }
@@ -212,6 +228,26 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
       </div>
     </div>
   </div>
+
+  <section class="benefits" aria-labelledby="benefits-h">
+    <header>
+      <h2 id="benefits-h">What slow breathing does for your body</h2>
+      <p>Lymph flow is one benefit of this practice. Here are the others, with a label showing how strong the evidence is for each.</p>
+      <div class="key"><span class="ev strong">Well established</span><span class="ev good">Good trials</span><span class="ev early">Early evidence</span></div>
+    </header>
+    <div class="cards">
+      <article class="card"><span class="ev strong">Well established</span><h3>Settles your nervous system</h3><p>Breathing slowly, around 6 breaths a minute, turns up the vagus nerve. That's the body's "rest and digest" side. Your heart slows a little on every out-breath, which is why a long exhale feels calming.</p><p class="when">You feel it within a minute or two.</p></article>
+      <article class="card"><span class="ev strong">Well established</span><h3>Moves lymph and blood</h3><p>Each time the diaphragm drops, pressure in the chest falls and pressure in the belly rises. This pushes lymph up the thoracic duct (more on this below) and also helps blood in the big veins flow back to the heart.</p><p class="when">Happens with every deep breath.</p></article>
+      <article class="card"><span class="ev strong">Well established</span><h3>Eases breathlessness</h3><p>Breathing out slowly through pursed lips keeps the airways open for longer and empties the lungs better. NHS lung-rehab classes teach it to people with COPD and asthma.</p><p class="when">Helps straight away when you're puffed.</p></article>
+      <article class="card"><span class="ev good">Good trials</span><h3>Lowers stress and lifts mood</h3><p>Trials of short daily breathing practice show people feel less anxious and in a better mood. In a 2023 Stanford study, 5 minutes a day of slow, exhale-focused breathing improved mood over a month.</p><p class="when">Builds over 2 to 4 weeks of daily practice.</p></article>
+      <article class="card"><span class="ev good">Good trials</span><h3>Can bring blood pressure down</h3><p>Slow breathing lowers blood pressure while you do it. With regular daily practice over several weeks, studies show a small fall of a few points. It adds to treatment; it doesn't replace it.</p><p class="when">Builds over weeks. Keep taking any medication.</p></article>
+      <article class="card"><span class="ev early">Early evidence</span><h3>Helps with reflux and digestion</h3><p>Part of the diaphragm wraps around the bottom of the food pipe and helps keep stomach acid down. Small trials found belly-breathing practice eased reflux symptoms. The calmer "rest and digest" state also helps the gut.</p><p class="when">Small studies so far, but promising.</p></article>
+      <article class="card"><span class="ev early">Early evidence</span><h3>Better sleep</h3><p>Slow breathing in bed slows the heart and quietens a busy mind, which helps some people fall asleep sooner. A short session before bed is a gentle habit to try.</p><p class="when">Small studies; worth trying for yourself.</p></article>
+      <article class="card"><span class="ev early">Early evidence</span><h3>Supports your core and back</h3><p>The diaphragm is the roof of your core muscles, with the pelvic floor as the floor. Breathing well with it helps them work together, and it is used in some back-pain and pelvic-floor rehab.</p><p class="when">Early evidence, mostly as part of physio.</p></article>
+      <article class="card"><span class="ev early">Early evidence</span><h3>Takes the edge off pain</h3><p>Slow breathing can make pain feel less intense, probably through the same calming effect on the nervous system. It is used alongside other care for long-term pain.</p><p class="when">Small studies; effects vary between people.</p></article>
+      <article class="card not"><h3>What it won't do</h3><p>It doesn't "detox" you, cure illness or replace medicine. Fast, forceful breathwork, such as rapid breathing with long breath-holds, is a different practice and can make you faint. Never do that kind in water or while driving.</p><p class="when">Slow, gentle and comfortable is the whole idea here.</p></article>
+    </div>
+  </section>
 
   <div class="guide">
     <section>
