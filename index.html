@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en-GB" data-app="1">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Paced diaphragmatic breathing with chimes, to help lymph flow. Works with your eyes closed.">
+<meta name="theme-color" content="#2a7770">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Lymph Breath">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Lymph Pump Breathing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one calm instrument. Breathing figure + live cue on the left, the pattern and cue settings on the right, guidance underneath. Stacks to one column on a phone. */
+:root {
+  --bg: #e8efed;
+  --surface: #f6faf9;
+  --ink: #132a28;
+  --muted: #526d67;
+  --line: #c6d6d1;
+  --accent: #2a7770;
+  --accent-ink: #ffffff;
+  --lymph: #c4860f;
+  --warn: #9a4a1c;
+  --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1716; --surface: #142120; --ink: #dbe9e5; --muted: #8aa49e; --line: #263735;
+    --accent: #5fbfb3; --accent-ink: #0d1716; --lymph: #e6b653; --warn: #e79a6b; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1716; --surface: #142120; --ink: #dbe9e5; --muted: #8aa49e; --line: #263735;
+  --accent: #5fbfb3; --accent-ink: #0d1716; --lymph: #e6b653; --warn: #e79a6b; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 56px; display: grid; gap: 28px; }
+
+header { display: grid; gap: 6px; max-width: 62ch; }
+.eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(30px, 6vw, 46px); line-height: 1.05; margin: 0; letter-spacing: -.01em; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); }
+
+.app { display: grid; gap: 20px; grid-template-columns: 1fr; }
+@media (min-width: 860px) { .app { grid-template-columns: 1.15fr 1fr; align-items: start; } }
+
+.stage { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px; display: grid; gap: 14px; justify-items: center; min-width: 0; }
+canvas { width: 100%; max-width: 380px; aspect-ratio: 1; display: block; }
+.cue { text-align: center; display: grid; gap: 2px; min-height: 118px; align-content: start; }
+.phase { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 7vw, 40px); line-height: 1.1; }
+.count { font-family: var(--display); font-weight: 500; font-size: 22px; color: var(--accent); font-variant-numeric: tabular-nums; min-height: 1.3em; }
+.hint { color: var(--muted); max-width: 34ch; margin: 0 auto; }
+
+.track { width: 100%; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.track > div { height: 100%; width: 0; background: var(--accent); transition: width .3s linear; }
+.meta { width: 100%; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.meta b { color: var(--ink); font-weight: 700; }
+
+.buttons { display: flex; gap: 10px; width: 100%; }
+button { font: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline: 3px solid var(--lymph); outline-offset: 2px; }
+.primary { flex: 1; border: 0; border-radius: 999px; padding: 14px 20px; background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 17px; }
+.ghost { border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 999px; padding: 14px 20px; }
+.ghost:disabled { opacity: .45; cursor: default; }
+
+.panel { display: grid; gap: 22px; min-width: 0; }
+.group { display: grid; gap: 10px; }
+.group h2 { margin: 0; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.chips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.chip { text-align: left; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 12px; padding: 10px 12px; display: grid; gap: 1px; }
+.chip strong { font-size: 15px; }
+.chip small { color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.chip[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.chip:disabled { opacity: .55; cursor: default; }
+
+.steppers { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.stepper { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 8px 6px; display: grid; gap: 4px; justify-items: center; }
+.stepper label { font-size: 12px; color: var(--muted); }
+.stepper .val { font-family: var(--display); font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+.stepper .val small { font-size: 12px; font-weight: 500; color: var(--muted); }
+.stepper .row { display: flex; gap: 6px; }
+.stepper button { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--ink); font-size: 18px; line-height: 1; }
+.stepper button:disabled { opacity: .4; cursor: default; }
+.rate { font-size: 13px; color: var(--muted); }
+.rate b { color: var(--ink); }
+
+.seg { display: flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: var(--surface); }
+.seg button { flex: 1; border: 0; background: transparent; color: var(--ink); padding: 10px 0; font-variant-numeric: tabular-nums; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.seg button:disabled { opacity: .55; cursor: default; }
+
+.toggles { display: flex; flex-wrap: wrap; gap: 8px; }
+.toggle { position: relative; display: inline-flex; }
+.toggle input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.toggle span { border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; background: var(--surface); font-size: 14px; }
+.toggle input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+
+.bells { display: grid; gap: 6px; }
+.bells p { margin: 0; font-size: 13.5px; color: var(--muted); }
+.bells p.small { font-size: 12.5px; }
+.bell { display: flex; align-items: center; gap: 12px; text-align: left; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 12px; padding: 8px 12px; font-size: 14px; }
+.bell b { display: block; font-size: 14.5px; }
+.bell .pip { flex: none; width: 22px; height: 22px; position: relative; }
+.bell .pip::before { content: ""; position: absolute; left: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--lymph); top: calc(18px - var(--h) * 6px); }
+.bell .pip::after { content: ""; position: absolute; left: 2px; right: 2px; bottom: 0; height: 2px; border-radius: 1px; background: var(--line); }
+.bell.ring { border-color: var(--lymph); }
+.install { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; font-size: 14px; }
+.install p { margin: 0; flex: 1 1 220px; min-width: 0; color: var(--muted); }
+.install p b { color: var(--ink); }
+.install .primary { flex: none; padding: 10px 18px; font-size: 15px; }
+.week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; align-items: end; height: 96px; }
+.day { display: grid; grid-template-rows: auto 1fr auto; height: 100%; justify-items: center; gap: 3px; font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.day .bar { width: 100%; max-width: 30px; align-self: end; background: var(--line); border-radius: 4px 4px 2px 2px; min-height: 3px; }
+.day.has .bar { background: var(--accent); }
+.day.today { color: var(--ink); font-weight: 700; }
+.weeknote { font-size: 13px; color: var(--muted); margin: 0; }
+
+.guide { display: grid; gap: 18px; grid-template-columns: 1fr; border-top: 1px solid var(--line); padding-top: 24px; }
+@media (min-width: 860px) { .guide { grid-template-columns: 1.1fr 1fr 1fr; gap: 28px; } }
+.guide section { min-width: 0; }
+.guide h2 { font-family: var(--display); font-size: 20px; margin: 0 0 8px; text-wrap: balance; }
+.guide p, .guide li { color: var(--ink); max-width: 62ch; }
+.guide p { margin: 0 0 10px; }
+.guide ol, .guide ul { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+.guide .care h2 { color: var(--warn); }
+.term { color: var(--lymph); font-weight: 700; }
+
+@media (prefers-reduced-motion: reduce) { .track > div { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Diaphragmatic breathing</div>
+    <h1>Lymph Pump Breathing</h1>
+    <p>Slow belly breaths, paced for you. Each breath moves the diaphragm down and up, and that pressure change helps push lymph up the thoracic duct towards the neck.</p>
+  </header>
+
+  <div class="install" id="install" hidden>
+    <p id="install-text"><b>Keep it on your phone.</b> Install it to open from your home screen, and use it without the internet.</p>
+    <button class="primary" type="button" id="install-btn" hidden>Install</button>
+  </div>
+
+  <div class="app">
+    <section class="stage" aria-label="Breathing guide">
+      <canvas id="fig" width="400" height="400" role="img" aria-label="A torso with lungs, the diaphragm and the thoracic duct. The diaphragm lowers as you breathe in and lymph moves upward."></canvas>
+      <div class="cue" aria-live="polite">
+        <div class="phase" id="phase">Ready when you are</div>
+        <div class="count" id="count"></div>
+        <p class="hint" id="hint">Sit or lie with knees bent. One hand on your chest, one on your belly.</p>
+      </div>
+      <div class="track" aria-hidden="true"><div id="bar"></div></div>
+      <div class="meta">
+        <span>Time left <b id="left">5:00</b></span>
+        <span>Breaths <b id="breaths">0</b></span>
+        <span><b id="bpm">5</b> breaths/min</span>
+      </div>
+      <div class="buttons">
+        <button class="primary" id="go" type="button">Start</button>
+        <button class="ghost" id="reset" type="button" disabled>Reset</button>
+      </div>
+    </section>
+
+    <div class="panel">
+      <div class="group">
+        <h2>Pattern</h2>
+        <div class="chips" id="presets"></div>
+      </div>
+
+      <div class="group">
+        <h2>Seconds per step</h2>
+        <div class="steppers" id="steppers"></div>
+        <div class="rate">Aim for a breath that feels unhurried. Shorten the numbers if you feel short of air.</div>
+      </div>
+
+      <div class="group">
+        <h2>Session length</h2>
+        <div class="seg" id="length"></div>
+      </div>
+
+      <div class="group">
+        <h2>Cues</h2>
+        <div class="toggles">
+          <label class="toggle"><input type="checkbox" id="cue-chime"><span>Chimes</span></label>
+          <label class="toggle"><input type="checkbox" id="cue-tone"><span>Rising tone</span></label>
+          <label class="toggle"><input type="checkbox" id="cue-voice"><span>Spoken cues</span></label>
+          <label class="toggle" id="vib-wrap" hidden><input type="checkbox" id="cue-vib"><span>Vibrate</span></label>
+        </div>
+        <div class="bells" id="bells">
+          <p>With chimes on you can close your eyes. Each bell tells you a step has finished and what to do next. Tap one to hear it.</p>
+          <button type="button" class="bell" id="bell-inh" data-bell="inh"><i class="pip" style="--h:3"></i><span><b>High bell</b> In-breath done. Hold, or breathe out.</span></button>
+          <button type="button" class="bell" id="bell-hold" data-bell="hold"><i class="pip" style="--h:2"></i><span><b>Middle bell</b> Hold done. Breathe out.</span></button>
+          <button type="button" class="bell" id="bell-exh" data-bell="exh"><i class="pip" style="--h:1"></i><span><b>Low bell</b> Out-breath done. Breathe in.</span></button>
+          <p class="small">The low bell also starts the session, and three falling bells end it. On an iPhone, turn the silent switch off to hear them.</p>
+        </div>
+      </div>
+
+      <div class="group">
+        <h2>Last 7 days</h2>
+        <div class="week" id="week"></div>
+        <p class="weeknote" id="weeknote">Minutes of completed sessions, kept on this device only.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="guide">
+    <section>
+      <h2>How to do it</h2>
+      <ol>
+        <li>Sit tall or lie on your back with knees bent. Loosen anything tight at the waist.</li>
+        <li>Optional warm-up: with a flat, light hand, stroke gently down into the hollow just above each collarbone, 10 slow times a side. Skin-deep pressure only.</li>
+        <li>Put one hand on your chest and one on your belly, just below the ribs.</li>
+        <li><strong>Breathe in</strong> through your nose. Let the belly hand rise. The chest hand barely moves.</li>
+        <li><strong>Hold</strong> softly at the top if the pattern asks. Never strain or clench.</li>
+        <li><strong>Breathe out</strong> slowly through pursed lips, as if through a straw. Let the belly fall, and at the very end draw it gently in.</li>
+        <li>Start with 3 to 5 minutes. Once or twice a day is a common routine.</li>
+      </ol>
+    </section>
+    <section>
+      <h2>Why it may help lymph flow</h2>
+      <p>Lymph has no heart to pump it. It moves when muscles squeeze the vessels, when the vessels contract on their own, and when pressure in the body changes.</p>
+      <p>When the <span class="term">diaphragm</span> drops on a deep in-breath, pressure in the chest falls and pressure in the belly rises. That squeezes lymph from the <span class="term">cisterna chyli</span> in the abdomen up the <span class="term">thoracic duct</span>, which empties into a vein at the base of the neck on the left side.</p>
+      <p>That is why deep breathing is part of most lymphoedema self-care routines. The physiology is well established; studies on long-term results are small, so treat this as one helpful habit alongside moving, walking and any care plan you already have.</p>
+    </section>
+    <section class="care">
+      <h2>Stop, or check first</h2>
+      <ul>
+        <li>If you feel dizzy, light-headed or tingly, stop and breathe normally. Shorter steps help.</li>
+        <li>If you have lymphoedema, have had lymph nodes removed or treated, are pregnant, or have a heart, lung or blood pressure condition, ask your GP or lymphoedema nurse before adding holds.</li>
+        <li>New or sudden swelling, especially in one leg with pain, warmth or redness, needs a doctor the same day. Breathing exercises are not a treatment for it.</li>
+      </ul>
+    </section>
+  </div>
+</div>
+
+<script>
+(() => {
+  const PRESETS = {
+    pump:     { name: 'Lymph pump',   inh: 4, hold: 2, exh: 6, rest: 0 },
+    gentle:   { name: 'Gentle start', inh: 3, hold: 0, exh: 4, rest: 0 },
+    even:     { name: 'Even 5 : 5',   inh: 5, hold: 0, exh: 5, rest: 0 },
+    longout:  { name: 'Long out-breath', inh: 4, hold: 0, exh: 8, rest: 0 },
+  };
+  const STEPS = [
+    { key: 'inh',  label: 'In',   min: 2, max: 10 },
+    { key: 'hold', label: 'Hold', min: 0, max: 7 },
+    { key: 'exh',  label: 'Out',  min: 2, max: 14 },
+    { key: 'rest', label: 'Rest', min: 0, max: 7 },
+  ];
+  const LENGTHS = [3, 5, 10, 15];
+  const WORDS = {
+    inh:  ['Breathe in',  'Through the nose. Belly rises, chest stays still.'],
+    hold: ['Hold',        'A soft pause at the top. No straining.'],
+    exh:  ['Breathe out', 'Slowly through pursed lips. Belly falls.'],
+    rest: ['Rest',        'Stay empty and easy. Let the next breath come.'],
+  };
+  const KEY = 'lymph-pump-breathing.v1';
+
+  // ---------- state ----------
+  let store = { s: { inh: 4, hold: 2, exh: 6, rest: 0, preset: 'pump', mins: 5, chime: true, tone: false, voice: false, vib: false }, log: {} };
+  try { const raw = localStorage.getItem(KEY); if (raw) { const o = JSON.parse(raw); store.s = { ...store.s, ...(o.s || {}) }; store.log = o.log || {}; } } catch (e) {}
+  const S = store.s;
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} };
+
+  let running = false, started = false, elapsed = 0, endAt = 0, lastT = 0, lastPhaseId = '', lastPhase = '', lastP = 0;
+  let p = 0.35; // 0 = fully out, 1 = fully in
+
+  const $ = id => document.getElementById(id);
+  const phases = () => [['inh', S.inh], ['hold', S.hold], ['exh', S.exh], ['rest', S.rest]].filter(x => x[1] > 0);
+  const cycleMs = () => phases().reduce((a, x) => a + x[1], 0) * 1000;
+  const fmt = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+  const ease = x => (1 - Math.cos(Math.PI * Math.min(1, Math.max(0, x)))) / 2;
+  const dayKey = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+
+  // ---------- controls ----------
+  const presetBox = $('presets');
+  for (const [id, pr] of Object.entries(PRESETS)) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.id = 'preset-' + id; b.dataset.id = id;
+    b.innerHTML = `<strong>${pr.name}</strong><small>${pr.inh} in · ${pr.hold ? pr.hold + ' hold · ' : ''}${pr.exh} out</small>`;
+    b.onclick = () => { Object.assign(S, { inh: pr.inh, hold: pr.hold, exh: pr.exh, rest: pr.rest, preset: id }); save(); render(); };
+    presetBox.appendChild(b);
+  }
+  const stepBox = $('steppers');
+  for (const st of STEPS) {
+    const d = document.createElement('div');
+    d.className = 'stepper';
+    d.innerHTML = `<label id="lab-${st.key}">${st.label}</label><div class="val" id="val-${st.key}"></div>
+      <div class="row"><button type="button" id="dec-${st.key}" aria-label="Fewer seconds, ${st.label}">−</button><button type="button" id="inc-${st.key}" aria-label="More seconds, ${st.label}">+</button></div>`;
+    stepBox.appendChild(d);
+    const bump = n => { S[st.key] = Math.min(st.max, Math.max(st.min, S[st.key] + n)); S.preset = matchPreset(); save(); render(); };
+    d.querySelector('#dec-' + st.key).onclick = () => bump(-1);
+    d.querySelector('#inc-' + st.key).onclick = () => bump(1);
+  }
+  const lenBox = $('length');
+  for (const m of LENGTHS) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.id = 'len-' + m; b.textContent = m + ' min';
+    b.onclick = () => { S.mins = m; save(); render(); };
+    lenBox.appendChild(b);
+  }
+  const matchPreset = () => (Object.entries(PRESETS).find(([, v]) => v.inh === S.inh && v.hold === S.hold && v.exh === S.exh && v.rest === S.rest) || [''])[0];
+
+  for (const [k, id] of [['chime', 'cue-chime'], ['tone', 'cue-tone'], ['voice', 'cue-voice'], ['vib', 'cue-vib']]) {
+    const el = $(id); el.checked = !!S[k];
+    el.onchange = () => { S[k] = el.checked; save(); if (k === 'chime') $('bells').hidden = !el.checked; if (k === 'tone') { if (el.checked && running) toneStart(); else toneStop(); } };
+  }
+  if ('vibrate' in navigator) $('vib-wrap').hidden = false;
+  $('bells').hidden = !S.chime;
+  for (const b of document.querySelectorAll('.bell')) b.onclick = () => { audio(); bell(b.dataset.bell); b.classList.add('ring'); setTimeout(() => b.classList.remove('ring'), 900); };
+  if (!('speechSynthesis' in window)) $('cue-voice').closest('label').hidden = true;
+
+  function render() {
+    const lock = running;
+    for (const b of presetBox.children) { b.setAttribute('aria-pressed', String(b.dataset.id === S.preset)); b.disabled = lock; }
+    for (const st of STEPS) {
+      $('val-' + st.key).innerHTML = S[st.key] + '<small>s</small>';
+      $('dec-' + st.key).disabled = lock || S[st.key] <= st.min;
+      $('inc-' + st.key).disabled = lock || S[st.key] >= st.max;
+    }
+    for (const b of lenBox.children) { b.setAttribute('aria-pressed', String(b.id === 'len-' + S.mins)); b.disabled = lock; }
+    const bpm = 60000 / cycleMs();
+    $('bpm').textContent = Number.isInteger(bpm) ? bpm : bpm.toFixed(1);
+    if (!started) { $('left').textContent = fmt(S.mins * 60000); $('breaths').textContent = '0'; $('bar').style.width = '0'; }
+    $('go').textContent = running ? 'Pause' : started ? 'Resume' : 'Start';
+    $('reset').disabled = !started;
+    renderWeek();
+  }
+
+  function renderWeek() {
+    const box = $('week'); box.innerHTML = '';
+    const today = new Date(); let total = 0; const vals = [];
+    for (let i = 6; i >= 0; i--) { const d = new Date(today); d.setDate(d.getDate() - i); const v = store.log[dayKey(d)] || 0; vals.push([d, v]); total += v; }
+    const max = Math.max(10, ...vals.map(v => v[1]));
+    vals.forEach(([d, v], i) => {
+      const el = document.createElement('div');
+      el.className = 'day' + (v ? ' has' : '') + (i === 6 ? ' today' : '');
+      el.innerHTML = `<span>${v ? Math.round(v) : ''}</span><div class="bar" style="height:${Math.max(3, (v / max) * 60)}px"></div><span>${i === 6 ? 'Today' : d.toLocaleDateString(undefined, { weekday: 'narrow' })}</span>`;
+      box.appendChild(el);
+    });
+    $('weeknote').textContent = total
+      ? `${Math.round(total)} minutes this week, kept on this device only.`
+      : 'Minutes of completed sessions show here, kept on this device only.';
+  }
+
+  // ---------- cues ----------
+  let ac = null, osc = null, gain = null;
+  // must first run inside a tap, so browsers allow sound
+  function audio() {
+    try {
+      if (navigator.audioSession) navigator.audioSession.type = 'playback'; // iPhone: play through the silent switch where supported
+      ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+      if (ac.state !== 'running') ac.resume();
+    } catch (e) { ac = null; }
+    return ac;
+  }
+  // a soft singing-bowl strike: a pure note, a quieter inharmonic overtone, long gentle fade
+  const BELLS = { inh: 659.3, hold: 523.3, exh: 392.0, rest: 392.0 };
+  function bell(name, when = 0, level = 1) {
+    if (!audio()) return;
+    try {
+      const f = BELLS[name] || 392, t = ac.currentTime + 0.02 + when;
+      const out = ac.createGain(); out.connect(ac.destination);
+      out.gain.setValueAtTime(0, t);
+      out.gain.linearRampToValueAtTime(0.22 * level, t + 0.012);
+      out.gain.exponentialRampToValueAtTime(0.0008, t + 3.2);
+      for (const [mult, amp] of [[1, 1], [2.76, 0.18], [5.4, 0.05]]) {
+        const o = ac.createOscillator(), g = ac.createGain();
+        o.type = 'sine'; o.frequency.value = f * mult; g.gain.value = amp;
+        o.connect(g).connect(out); o.start(t); o.stop(t + 3.3);
+      }
+    } catch (e) {}
+  }
+  function toneStart() {
+    try {
+      if (!audio()) return;
+      if (osc) return;
+      osc = ac.createOscillator(); gain = ac.createGain();
+      osc.type = 'sine'; osc.frequency.value = 196; gain.gain.value = 0;
+      osc.connect(gain).connect(ac.destination); osc.start();
+    } catch (e) {}
+  }
+  function toneStop() {
+    if (!osc) return;
+    try { gain.gain.setTargetAtTime(0, ac.currentTime, 0.08); const o = osc; setTimeout(() => { try { o.stop(); } catch (e) {} }, 400); } catch (e) {}
+    osc = null; gain = null;
+  }
+  function toneFor(name, secs) {
+    if (!osc || !ac) return;
+    const t = ac.currentTime, f = osc.frequency, g = gain.gain;
+    f.cancelScheduledValues(t); g.cancelScheduledValues(t);
+    f.setValueAtTime(f.value, t); g.setValueAtTime(g.value, t);
+    if (name === 'inh') { f.linearRampToValueAtTime(330, t + secs); g.linearRampToValueAtTime(0.06, t + 0.4); }
+    if (name === 'hold') { g.linearRampToValueAtTime(0.025, t + 0.5); }
+    if (name === 'exh') { f.linearRampToValueAtTime(196, t + secs); g.linearRampToValueAtTime(0.06, t + 0.4); g.linearRampToValueAtTime(0.03, t + secs); }
+    if (name === 'rest') { g.linearRampToValueAtTime(0, t + 0.6); }
+  }
+  function cue(name, secs, finished) {
+    if (S.chime && finished) bell(finished, 0, finished === 'rest' ? 0.7 : 1);
+    if (S.tone) toneFor(name, secs);
+    if (S.voice && 'speechSynthesis' in window) {
+      try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(WORDS[name][0]); u.rate = 0.85; u.pitch = 0.9; speechSynthesis.speak(u); } catch (e) {}
+    }
+    if (S.vib && navigator.vibrate) { try { navigator.vibrate(name === 'inh' ? 60 : name === 'exh' ? [40, 90, 40] : 20); } catch (e) {} }
+  }
+
+  // ---------- session ----------
+  let wake = null;
+  async function lockScreen() { try { wake = await navigator.wakeLock?.request('screen'); } catch (e) { wake = null; } }
+  function unlockScreen() { try { wake?.release(); } catch (e) {} wake = null; }
+
+  function start() {
+    audio();
+    if (S.chime && !started) bell('exh');
+    if (!started) { elapsed = 0; endAt = Math.ceil((S.mins * 60000) / cycleMs()) * cycleMs(); lastPhaseId = ''; lastPhase = ''; started = true; }
+    running = true; lastT = performance.now();
+    if (S.tone) toneStart();
+    lockScreen(); render();
+  }
+  function pause() {
+    running = false; toneStop(); unlockScreen();
+    try { speechSynthesis.cancel(); } catch (e) {}
+    $('phase').textContent = 'Paused'; $('count').textContent = ''; $('hint').textContent = 'Breathe normally. Resume when ready.';
+    lastPhaseId = ''; lastPhase = ''; render();
+  }
+  function reset(done) {
+    running = false; started = false; toneStop(); unlockScreen();
+    try { speechSynthesis.cancel(); } catch (e) {}
+    $('phase').textContent = done ? 'Well done' : 'Ready when you are';
+    $('count').textContent = done ? fmt(done) + ' logged' : '';
+    $('hint').textContent = done ? 'Sit for a moment and breathe normally before you get up.' : 'Sit or lie with knees bent. One hand on your chest, one on your belly.';
+    render();
+  }
+  function finish() {
+    const mins = endAt / 60000; const k = dayKey(new Date());
+    store.log[k] = (store.log[k] || 0) + mins;
+    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 60);
+    for (const d of Object.keys(store.log)) if (d < dayKey(cutoff)) delete store.log[d];
+    save();
+    if (S.chime) { bell('inh', 0); bell('hold', 0.7); bell('exh', 1.4); }
+    reset(endAt);
+  }
+  $('go').onclick = () => (running ? pause() : start());
+  $('reset').onclick = () => reset(0);
+  document.addEventListener('visibilitychange', () => { if (document.hidden && running) pause(); });
+
+  function tick(now) {
+    if (running) {
+      elapsed += Math.min(250, now - lastT); lastT = now;
+      if (elapsed >= endAt) { finish(); }
+      else {
+        const cyc = cycleMs(); const n = Math.floor(elapsed / cyc); let pos = elapsed - n * cyc;
+        let name = 'inh', dur = 1, into = 0, i = 0;
+        for (const [nm, s] of phases()) { const ms = s * 1000; if (pos < ms) { name = nm; dur = ms; into = pos; break; } pos -= ms; i++; }
+        const frac = into / dur;
+        p = name === 'inh' ? ease(frac) : name === 'hold' ? 1 : name === 'exh' ? 1 - ease(frac) : 0;
+        const id = n + ':' + i;
+        if (id !== lastPhaseId) {
+          lastPhaseId = id;
+          $('phase').textContent = WORDS[name][0]; $('hint').textContent = WORDS[name][1];
+          cue(name, (dur - into) / 1000, lastPhase);
+          lastPhase = name;
+        }
+        $('count').textContent = Math.ceil((dur - into) / 1000);
+        $('left').textContent = fmt(endAt - elapsed);
+        $('breaths').textContent = n + (name === 'inh' ? 0 : 1);
+        $('bar').style.width = (elapsed / endAt * 100).toFixed(2) + '%';
+      }
+    }
+    draw(now);
+    requestAnimationFrame(tick);
+  }
+
+  // ---------- figure ----------
+  const cv = $('fig'), ctx = cv.getContext('2d');
+  let colors = {}, colorsAt = -1e9;
+  function readColors(now) {
+    if (now - colorsAt < 500) return; colorsAt = now;
+    const cs = getComputedStyle(document.documentElement);
+    for (const k of ['surface', 'ink', 'muted', 'line', 'accent', 'lymph', 'bg']) colors[k] = cs.getPropertyValue('--' + k).trim();
+  }
+  function fit() {
+    const w = cv.clientWidth || 380, dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = Math.round(w * dpr); cv.height = Math.round(w * dpr);
+  }
+  new ResizeObserver(fit).observe(cv); fit();
+
+  const duct = [[200, 268], [207, 175], [194, 104], [254, 86]];
+  const bez = t => { const u = 1 - t; const [a, b, c, d] = duct;
+    return [u*u*u*a[0] + 3*u*u*t*b[0] + 3*u*t*t*c[0] + t*t*t*d[0], u*u*u*a[1] + 3*u*u*t*b[1] + 3*u*t*t*c[1] + t*t*t*d[1]]; };
+  const beads = Array.from({ length: 9 }, (_, i) => i / 9);
+  let lastDraw = 0;
+
+  function draw(now) {
+    readColors(now);
+    const dt = Math.min(0.1, (now - (lastDraw || now)) / 1000); lastDraw = now;
+    const dp = dt > 0 ? Math.abs(p - lastP) / dt : 0; lastP = p;
+    const k = cv.width / 400;
+    ctx.setTransform(k, 0, 0, k, 0, 0);
+    ctx.clearRect(0, 0, 400, 400);
+
+    const bx = 12 * p, rx = 5 * p;
+    // torso
+    ctx.beginPath();
+    ctx.moveTo(156, 44);
+    ctx.quadraticCurveTo(156, 76, 110, 84);
+    ctx.quadraticCurveTo(84 - rx, 92, 88 - rx, 140);
+    ctx.bezierCurveTo(92 - rx, 200, 112 - bx, 240, 116 - bx, 292);
+    ctx.quadraticCurveTo(120 - bx, 334, 134, 366);
+    ctx.lineTo(266, 366);
+    ctx.quadraticCurveTo(280 + bx, 334, 284 + bx, 292);
+    ctx.bezierCurveTo(288 + bx, 240, 308 + rx, 200, 312 + rx, 140);
+    ctx.quadraticCurveTo(316 + rx, 92, 290, 84);
+    ctx.quadraticCurveTo(244, 76, 244, 44);
+    ctx.fillStyle = colors.bg; ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = colors.line; ctx.stroke();
+
+    // lungs
+    ctx.save(); ctx.globalAlpha = 0.16 + 0.12 * p; ctx.fillStyle = colors.accent;
+    for (const cx of [158, 242]) {
+      ctx.beginPath(); ctx.ellipse(cx + (cx < 200 ? -1 : 1) * 4 * p, 146 + 6 * p, 36 + 7 * p, 52 + 10 * p, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+
+    // diaphragm: domed up on the out-breath, flattened and lowered on the in-breath
+    const dy = 212 + 6 * p, cyp = 148 + 56 * p;
+    ctx.beginPath(); ctx.moveTo(104 - rx, dy); ctx.quadraticCurveTo(200, cyp, 296 + rx, dy);
+    ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.strokeStyle = colors.accent; ctx.stroke();
+
+    // thoracic duct
+    ctx.beginPath(); ctx.moveTo(...duct[0]); ctx.bezierCurveTo(...duct[1], ...duct[2], ...duct[3]);
+    ctx.lineWidth = 3; ctx.strokeStyle = colors.lymph; ctx.globalAlpha = 0.35; ctx.stroke(); ctx.globalAlpha = 1;
+    ctx.fillStyle = colors.lymph;
+    ctx.beginPath(); ctx.ellipse(200, 272, 9, 13, 0, 0, Math.PI * 2); ctx.globalAlpha = 0.55; ctx.fill(); ctx.globalAlpha = 1;
+    ctx.beginPath(); ctx.arc(254, 86, 5, 0, Math.PI * 2); ctx.fill();
+
+    // lymph beads: drift slowly, surge with each movement of the diaphragm
+    const speed = 0.018 + 0.22 * dp;
+    for (let i = 0; i < beads.length; i++) {
+      beads[i] = (beads[i] + speed * dt) % 1;
+      const [x, y] = bez(beads[i]);
+      const fade = Math.min(1, beads[i] * 8, (1 - beads[i]) * 8);
+      ctx.globalAlpha = 0.25 + 0.75 * fade;
+      ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // labels
+    ctx.font = '600 12px "Atkinson Hyperlegible", system-ui, sans-serif';
+    ctx.fillStyle = colors.muted; ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    ctx.fillText('diaphragm', 300 + rx + 2, dy + 18);
+    ctx.fillText('cisterna chyli', 214, 288);
+    ctx.fillText('drains into vein', 262, 74);
+    ctx.textAlign = 'right';
+    ctx.fillText('thoracic duct', 192, 186);
+    ctx.textAlign = 'center';
+    ctx.fillText('belly', 200, 334);
+  }
+
+  render();
+  requestAnimationFrame(tick);
+
+  // ---------- installed app only (build.py sets data-app on the app's <html>) ----------
+  if (document.documentElement.dataset.app) {
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+    const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    let deferred = null;
+    if (!standalone) {
+      if (ios) {
+        $('install-text').innerHTML = '<b>Keep it on your phone.</b> In Safari, tap the Share button, then <b>Add to Home Screen</b>. It then works without the internet.';
+        $('install').hidden = false;
+      }
+      addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; $('install').hidden = false; $('install-btn').hidden = false; });
+      $('install-btn').onclick = async () => { if (!deferred) return; deferred.prompt(); try { await deferred.userChoice; } catch (e) {} deferred = null; $('install').hidden = true; };
+      addEventListener('appinstalled', () => { $('install').hidden = true; });
+    }
+  }
+})();
+</script>
+
+</body>
+</html>
