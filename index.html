@@ -90,6 +90,9 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
 .about h3 { margin: 0; font-size: 16px; }
 .about h3 small { font-weight: 400; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
 .about p { margin: 0; font-size: 14.5px; }
+.about .lead { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+.about ul { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; font-size: 14.5px; }
+.about li::marker { color: var(--lymph); }
 .about .for { color: var(--muted); font-size: 13.5px; }
 .about .for b { color: var(--ink); }
 .chip:disabled { opacity: .55; cursor: default; }
@@ -264,7 +267,7 @@ body.focus .orbwrap { max-width: min(460px, 54vh); }
       <h2 id="inside-h">Inside you, right now</h2>
       <p>This moves in time with the orb. As you breathe in, your <span class="term">diaphragm</span> (the band under the lungs) flattens and drops. Pressure in your belly rises and pressure in your chest falls.</p>
       <p>That squeeze pushes lymph, the golden dots, out of the <span class="term">cisterna chyli</span> in your belly and up the <span class="term">thoracic duct</span>. At the base of your neck it empties into a vein and rejoins your blood.</p>
-      <p class="small">The dots speed up whenever the diaphragm moves. That is the pump this app is named after.</p>
+      <p><b>What this means for you:</b> moving lymph carries extra fluid and waste away from your tissues and through your lymph nodes, where your immune system filters out germs. When lymph slows down, for example after long hours sitting, fluid can pool and leave you puffy, with heavy legs. Every deep breath gives it a push.</p>
     </div>
   </section>
 
@@ -333,16 +336,32 @@ body.focus .orbwrap { max-width: min(460px, 54vh); }
     { key: 'rest', label: 'Rest', min: 0, max: 7 },
   ];
   const LENGTHS = [3, 5, 10, 15];
-  // what each pattern does for the body, shown under the pattern buttons
+  // what each pattern does for the body, shown under the pattern buttons: [benefit, why] pairs, then who it suits
   const ABOUT = {
-    pump: ['Built for lymph flow. The deep 4-second in-breath drops the diaphragm all the way, squeezing the belly and pushing lymph up towards the chest. The soft 2-second hold gives that pressure change a moment before you let go. The long 6-second out-breath lets the diaphragm rise slowly, ready for the next push. At 5 breaths a minute it also calms the nervous system.',
-           'your daily lymph routine, mornings, and after sitting still for a long time.'],
-    gentle: ['Shorter, easier breaths. It still uses the belly and still has a longer out-breath, which tips the body towards calm, but it asks much less of your lungs. Move up to Lymph pump once this feels easy.',
-             'learning the technique, tired or unwell days, and anyone who gets light-headed or short of breath.'],
-    even: ['Equal in and out at 6 breaths a minute, often called resonance or coherent breathing. At about this rate the rhythms of your heart and blood pressure line up with your breath. That gives the biggest healthy swing in heart rate, a sign of a relaxed nervous system. Heart-rate biofeedback studies use this rate.',
-           'steady calm, focus, and settling yourself before something stressful.'],
-    longout: ['The out-breath is twice as long as the in-breath. Your heart naturally slows on every out-breath, so stretching it out leans hardest towards "rest and digest". If 8 seconds feels like a strain, use 3 in and 6 out.',
-              'winding down in the evening, before sleep, and anxious moments.'],
+    pump: [[
+      ['Less puffiness and fluid build-up', 'it helps drain fluid from your legs, belly and gut back into your blood, which can ease swollen, heavy-feeling legs and ankles.'],
+      ['Supports your immune system', 'lymph carries white blood cells through your lymph nodes, where germs are filtered out. Moving it keeps that system flowing.'],
+      ['Better circulation', 'the same pumping action helps blood in your legs and belly return to your heart.'],
+      ['A calmer body', 'at 5 breaths a minute your heart rate settles and stress eases.'],
+    ], 'a daily lymph routine, mornings, after long flights or drives, and after sitting still for hours.'],
+    gentle: [[
+      ['Calm without strain', 'it slows your heart and settles your nerves while asking very little of your lungs.'],
+      ['More oxygen from each breath', 'belly breathing fills the bottom of your lungs, the part with the most blood flowing through it, so each breath does more work.'],
+      ['Eases breathlessness and anxiety', 'slow, easy breaths stop the quick, shallow chest breathing that makes both worse.'],
+      ['Still moves lymph', 'a gentle version of the pump, so you get some of the drainage benefit.'],
+    ], 'learning the technique, tired or unwell days, older people, and anyone who gets light-headed. Move up to Lymph pump once it feels easy.'],
+    even: [[
+      ['Lower stress', 'this is the rate at which your heart and breath fall into step, which switches on your body\'s calming system most strongly.'],
+      ['Healthier blood pressure', 'practised daily for a few weeks, it can bring blood pressure down by a few points.'],
+      ['A stronger, steadier heart rhythm', 'it raises heart rate variability, a sign of a healthy, resilient heart and nervous system.'],
+      ['Clearer focus', 'a calmer body makes it easier to think straight and keep your emotions steady.'],
+    ], 'everyday calm, focus, and settling yourself before something stressful.'],
+    longout: [[
+      ['Slows your heart fastest', 'your heart slows on every out-breath, so a long one calms you quicker than any other pattern here.'],
+      ['Better sleep', 'it quietens a busy mind and relaxes the body, so you drift off more easily.'],
+      ['Eases anxiety and panic', 'a long, slow out-breath tells your body the danger has passed.'],
+      ['Helps digestion', 'it switches your body into "rest and digest" mode, when your gut works best.'],
+    ], 'winding down in the evening, in bed before sleep, and anxious moments. If 8 seconds is a strain, use 3 in and 6 out.'],
   };
   const WORDS = {
     inh:  ['Breathe in',  'Through the nose. Belly rises, chest stays still.'],
@@ -428,7 +447,7 @@ body.focus .orbwrap { max-width: min(460px, 54vh); }
     const rate = (Number.isInteger(bpm) ? bpm : bpm.toFixed(1)) + ' breaths a minute';
     const pr = PRESETS[S.preset], ab = ABOUT[S.preset];
     $('about').innerHTML = pr
-      ? `<h3>${pr.name} <small>· ${rate}</small></h3><p>${ab[0]}</p><p class="for"><b>Good for:</b> ${ab[1]}</p>`
+      ? `<h3>${pr.name} <small>· ${rate}</small></h3><p class="lead">What it does for your body</p><ul>${ab[0].map(([t, w]) => `<li><b>${t}:</b> ${w}</li>`).join('')}</ul><p class="for"><b>Good for:</b> ${ab[1]}</p>`
       : `<h3>Your own pattern <small>· ${S.inh} in${S.hold ? ' · ' + S.hold + ' hold' : ''} · ${S.exh} out${S.rest ? ' · ' + S.rest + ' rest' : ''} · ${rate}</small></h3><p>Keep every step comfortable. Around 5 or 6 breaths a minute, with an out-breath at least as long as the in-breath, gives the calming and lymph-moving effects. If you feel light-headed, shorten the steps.</p>`;
     $('bpm').textContent = Number.isInteger(bpm) ? bpm : bpm.toFixed(1);
     if (!started) { $('left').textContent = fmt(S.mins * 60000); $('breaths').textContent = '0'; $('bar').style.width = '0'; }
