@@ -82,6 +82,7 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
 .group { display: grid; gap: 10px; }
 .group h2 { margin: 0; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
 .chips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.chips .chip:first-child { grid-column: 1 / -1; } /* Lymph pump leads; the other six pair up */
 .chip { text-align: left; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 14px; padding: 10px 12px; display: grid; gap: 1px; }
 .chip strong { font-size: 15px; }
 .chip small { color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
@@ -97,7 +98,7 @@ button:focus-visible, input:focus-visible + span, .chip:focus-visible { outline:
 .about .for b { color: var(--ink); }
 .chip:disabled { opacity: .55; cursor: default; }
 
-.steppers { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.steppers { display: grid; grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); gap: 8px; }
 .stepper { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 8px 6px; display: grid; gap: 4px; justify-items: center; }
 .stepper label { font-size: 12px; color: var(--muted); }
 .stepper .val { font-family: var(--display); font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
@@ -245,10 +246,11 @@ body.focus .orbwrap { max-width: min(460px, 54vh); }
         </div>
         <div class="waterrow" id="water-row" hidden><label for="water-vol">Water volume</label><input type="range" id="water-vol" min="5" max="100" step="1"></div>
         <div class="bells" id="bells">
-          <p>With chimes on you can close your eyes. Each bell tells you a step has finished and what to do next. Tap one to hear it.</p>
-          <button type="button" class="bell" id="bell-inh" data-bell="inh"><svg class="pip" viewBox="0 0 28 22" aria-hidden="true"><circle cx="14" cy="6" r="3.5"/></svg><span><b>Bright ting</b> In-breath done. Hold, or breathe out.</span></button>
-          <button type="button" class="bell" id="bell-hold" data-bell="hold"><svg class="pip" viewBox="0 0 28 22" aria-hidden="true"><circle cx="14" cy="15.5" r="6"/></svg><span><b>Deep bell</b> Hold done. Breathe out while it rings.</span></button>
-          <button type="button" class="bell" id="bell-exh" data-bell="exh"><svg class="pip" viewBox="0 0 28 22" aria-hidden="true"><circle cx="14" cy="11" r="4.5"/></svg><span><b>Soft bell</b> Out-breath done. Breathe in.</span></button>
+          <p>With chimes on you can close your eyes. Each bell tells you what to do next. Tap one to hear it.</p>
+          <button type="button" class="bell" id="bell-soft" data-bell="soft"><svg class="pip" viewBox="0 0 28 22" aria-hidden="true"><circle cx="14" cy="11" r="4.5"/></svg><span><b>Soft bell</b> Breathe in.</span></button>
+          <button type="button" class="bell" id="bell-double" data-bell="double" hidden><svg class="pip" viewBox="0 0 28 22" aria-hidden="true"><circle cx="9" cy="7" r="3"/><circle cx="19" cy="7" r="3"/></svg><span><b>Double ting</b> Take a quick top-up sniff.</span></button>
+          <button type="button" class="bell" id="bell-ting" data-bell="ting"><svg class="pip" viewBox="0 0 28 22" aria-hidden="true"><circle cx="14" cy="6" r="3.5"/></svg><span><b>Bright ting</b> Hold your breath softly.</span></button>
+          <button type="button" class="bell" id="bell-deep" data-bell="deep"><svg class="pip" viewBox="0 0 28 22" aria-hidden="true"><circle cx="14" cy="15.5" r="6"/></svg><span><b>Deep bell</b> Breathe out while it rings.</span></button>
           <p class="small">The soft bell also starts the session, and all three play in a row to end it. On an iPhone, turn the silent switch off to hear them.</p>
         </div>
       </div>
@@ -324,16 +326,20 @@ body.focus .orbwrap { max-width: min(460px, 54vh); }
 <script>
 (() => {
   const PRESETS = {
-    pump:     { name: 'Lymph pump',   inh: 4, hold: 2, exh: 6, rest: 0 },
-    gentle:   { name: 'Gentle start', inh: 3, hold: 0, exh: 4, rest: 0 },
-    even:     { name: 'Even 5 : 5',   inh: 5, hold: 0, exh: 5, rest: 0 },
-    longout:  { name: 'Long out-breath', inh: 4, hold: 0, exh: 8, rest: 0 },
+    pump:     { name: 'Lymph pump',   inh: 4, top: 0, hold: 2, exh: 6, rest: 0 },
+    gentle:   { name: 'Gentle start', inh: 3, top: 0, hold: 0, exh: 4, rest: 0 },
+    even:     { name: 'Even 5 : 5',   inh: 5, top: 0, hold: 0, exh: 5, rest: 0 },
+    longout:  { name: 'Long out-breath', inh: 4, top: 0, hold: 0, exh: 8, rest: 0 },
+    sigh:     { name: 'Physiological sigh', inh: 3, top: 1, hold: 0, exh: 6, rest: 0 },
+    box:      { name: 'Box breathing', inh: 4, top: 0, hold: 4, exh: 4, rest: 4 },
+    f478:     { name: '4-7-8',        inh: 4, top: 0, hold: 7, exh: 8, rest: 0 },
   };
   const STEPS = [
     { key: 'inh',  label: 'In',   min: 2, max: 10 },
+    { key: 'top',  label: 'Top-up', min: 0, max: 3 },
     { key: 'hold', label: 'Hold', min: 0, max: 7 },
     { key: 'exh',  label: 'Out',  min: 2, max: 14 },
-    { key: 'rest', label: 'Rest', min: 0, max: 7 },
+    { key: 'rest', label: 'Pause', min: 0, max: 7 },
   ];
   const LENGTHS = [3, 5, 10, 15];
   // what each pattern does for the body, shown under the pattern buttons: [benefit, why] pairs, then who it suits
@@ -362,31 +368,52 @@ body.focus .orbwrap { max-width: min(460px, 54vh); }
       ['Eases anxiety and panic', 'a long, slow out-breath tells your body the danger has passed.'],
       ['Helps digestion', 'it switches your body into "rest and digest" mode, when your gut works best.'],
     ], 'winding down in the evening, in bed before sleep, and anxious moments. If 8 seconds is a strain, use 3 in and 6 out.'],
+    sigh: [[
+      ['The fastest way to calm down', 'the double in-breath re-opens tiny air sacs in the lungs that have partly closed, and the long out-breath clears carbon dioxide and slows your heart. Your body does this by itself after crying and as you fall asleep.'],
+      ['Lifts your mood', 'in a 2023 Stanford study, 5 minutes a day for a month improved mood and slowed resting breathing more than mindfulness meditation did.'],
+      ['Less anxiety', 'people in that study also felt less anxious, and the effect grew the more days they practised.'],
+      ['Works in one or two breaths', 'even a single sigh takes the edge off a stressful moment, so you can use it anywhere.'],
+    ], 'stress in the moment, after a shock or an argument, and 5 minutes a day to lift your mood.'],
+    box: [[
+      ['Steadies you under pressure', 'four equal steps give a racing mind something simple to follow. US Navy SEALs and police use it in tense situations.'],
+      ['A calmer heart', 'each breath takes 16 seconds, slow enough to settle your heart rate and lower stress.'],
+      ['Sharper focus', 'counting the steps pulls your attention away from worries and back to the present.'],
+      ['More at ease without air', 'short, soft holds teach the body that a pause in breathing is safe, which helps some people feel less panicky when short of breath.'],
+    ], 'stressful moments, before an exam, interview or difficult conversation, and refocusing at work.'],
+    f478: [[
+      ['Helps you fall asleep', 'Dr Andrew Weil designed it as a natural aid to sleep. The long hold and very long out-breath slow your whole body down.'],
+      ['Slows your heart the most', 'the 8-second out-breath is the longest of any pattern here, and your heart slows on every out-breath.'],
+      ['Calms anxiety quickly', 'many people find 4 rounds is enough to feel settled.'],
+      ['Quietens a busy mind', 'counting to 7 and to 8 keeps your thoughts busy, so worries get less room.'],
+    ], 'bedtime, waking in the night, and anxious moments. Start with 4 rounds. Feeling a little light-headed at first is common; if you do, stop and breathe normally.'],
   };
   const WORDS = {
     inh:  ['Breathe in',  'Through the nose. Belly rises, chest stays still.'],
     hold: ['Hold',        'A soft pause at the top. No straining.'],
     exh:  ['Breathe out', 'Slowly through pursed lips. Belly falls.'],
-    rest: ['Rest',        'Stay empty and easy. Let the next breath come.'],
+    rest: ['Hold empty',  'Stay softly empty, lungs relaxed. No straining.'],
+    top:  ['Top-up sniff', 'One more short sniff through the nose, on top of the full breath.'],
   };
   const KEY = 'lymph-pump-breathing.v1';
 
   // ---------- state ----------
-  let store = { s: { inh: 4, hold: 2, exh: 6, rest: 0, preset: 'pump', mins: 5, chime: true, tone: false, voice: false, vib: false, water: true, waterVol: 35 }, log: {} };
+  let store = { s: { inh: 4, top: 0, hold: 2, exh: 6, rest: 0, preset: 'pump', mins: 5, chime: true, tone: false, voice: false, vib: false, water: true, waterVol: 35 }, log: {} };
   try { const raw = localStorage.getItem(KEY); if (raw) { const o = JSON.parse(raw); store.s = { ...store.s, ...(o.s || {}) }; store.log = o.log || {}; } } catch (e) {}
   const S = store.s;
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} };
 
   let running = false, started = false, elapsed = 0, lastT = 0, lastP = 0, phaseFrac = 0;
   let cur = 'inh', curStart = 0, curDur = 4000, cycles = 0;
-  const ORDER = ['inh', 'hold', 'exh', 'rest'];
-  const nextPhase = nm => { const i = ORDER.indexOf(nm); for (let k = 1; k <= 4; k++) { const n = ORDER[(i + k) % 4]; if (S[n] > 0) return n; } return 'inh'; };
+  const ORDER = ['inh', 'top', 'hold', 'exh', 'rest'];
+  const nextPhase = nm => { const i = ORDER.indexOf(nm); for (let k = 1; k <= ORDER.length; k++) { const n = ORDER[(i + k) % ORDER.length]; if (S[n] > 0) return n; } return 'inh'; };
   // where we are in the current pattern's cycle, in ms (used by the wave)
   const posNow = () => { let off = 0; for (const n of ORDER) { if (n === cur) break; off += S[n] * 1000; } return off + Math.min(elapsed - curStart, Math.max(0, S[cur] * 1000 - 1)); };
   let p = 0.35; // 0 = fully out, 1 = fully in
 
   const $ = id => document.getElementById(id);
-  const phases = () => [['inh', S.inh], ['hold', S.hold], ['exh', S.exh], ['rest', S.rest]].filter(x => x[1] > 0);
+  const phases = () => [['inh', S.inh], ['top', S.top], ['hold', S.hold], ['exh', S.exh], ['rest', S.rest]].filter(x => x[1] > 0);
+  // how full the lungs are, 0..1, at a fraction through a step. With a top-up sniff the first in-breath fills to 80%.
+  const fill = (nm, f) => { const pk = S.top > 0 ? 0.8 : 1; return nm === 'inh' ? pk * ease(f) : nm === 'top' ? pk + (1 - pk) * ease(f) : nm === 'hold' ? 1 : nm === 'exh' ? 1 - ease(f) : 0; };
   const cycleMs = () => phases().reduce((a, x) => a + x[1], 0) * 1000;
   const fmt = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
   const ease = x => (1 - Math.cos(Math.PI * Math.min(1, Math.max(0, x)))) / 2;
@@ -397,14 +424,14 @@ body.focus .orbwrap { max-width: min(460px, 54vh); }
   for (const [id, pr] of Object.entries(PRESETS)) {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'chip'; b.id = 'preset-' + id; b.dataset.id = id;
-    b.innerHTML = `<strong>${pr.name}</strong><small>${pr.inh} in · ${pr.hold ? pr.hold + ' hold · ' : ''}${pr.exh} out</small>`;
-    b.onclick = () => { Object.assign(S, { inh: pr.inh, hold: pr.hold, exh: pr.exh, rest: pr.rest, preset: id }); save(); render(); };
+    b.innerHTML = `<strong>${pr.name}</strong><small>${pr.inh} in · ${pr.top ? pr.top + ' sniff · ' : ''}${pr.hold ? pr.hold + ' hold · ' : ''}${pr.exh} out${pr.rest ? ' · ' + pr.rest + ' pause' : ''}</small>`;
+    b.onclick = () => { Object.assign(S, { inh: pr.inh, top: pr.top, hold: pr.hold, exh: pr.exh, rest: pr.rest, preset: id }); save(); render(); };
     presetBox.appendChild(b);
   }
   const stepBox = $('steppers');
   for (const st of STEPS) {
     const d = document.createElement('div');
-    d.className = 'stepper';
+    d.className = 'stepper'; d.id = 'step-' + st.key;
     d.innerHTML = `<label id="lab-${st.key}">${st.label}</label><div class="val" id="val-${st.key}"></div>
       <div class="row"><button type="button" id="dec-${st.key}" aria-label="Fewer seconds, ${st.label}">−</button><button type="button" id="inc-${st.key}" aria-label="More seconds, ${st.label}">+</button></div>`;
     stepBox.appendChild(d);
@@ -419,7 +446,7 @@ body.focus .orbwrap { max-width: min(460px, 54vh); }
     b.onclick = () => { S.mins = m; save(); render(); };
     lenBox.appendChild(b);
   }
-  const matchPreset = () => (Object.entries(PRESETS).find(([, v]) => v.inh === S.inh && v.hold === S.hold && v.exh === S.exh && v.rest === S.rest) || [''])[0];
+  const matchPreset = () => (Object.entries(PRESETS).find(([, v]) => v.inh === S.inh && v.top === S.top && v.hold === S.hold && v.exh === S.exh && v.rest === S.rest) || [''])[0];
 
   for (const [k, id] of [['chime', 'cue-chime'], ['water', 'cue-water'], ['tone', 'cue-tone'], ['voice', 'cue-voice'], ['vib', 'cue-vib']]) {
     const el = $(id); el.checked = !!S[k];
@@ -431,7 +458,7 @@ body.focus .orbwrap { max-width: min(460px, 54vh); }
   $('water-vol').value = S.waterVol;
   $('water-vol').oninput = e => { S.waterVol = +e.target.value; save(); if (waterBus && waterLive) waterBus.gain.setTargetAtTime(waterLevel(), ac.currentTime, 0.15); };
   $('water-vol').onchange = () => { if (!running && S.water) { waterOn(); setTimeout(() => { if (!running) waterOff(); }, 4000); } };
-  for (const b of document.querySelectorAll('.bell')) b.onclick = () => { audio(); bell(b.dataset.bell); b.classList.add('ring'); setTimeout(() => b.classList.remove('ring'), b.dataset.bell === 'hold' ? S.exh * 1000 : 900); };
+  for (const b of document.querySelectorAll('.bell')) b.onclick = () => { audio(); bell(b.dataset.bell); b.classList.add('ring'); setTimeout(() => b.classList.remove('ring'), b.dataset.bell === 'deep' ? S.exh * 1000 : 900); };
   if (!('speechSynthesis' in window)) $('cue-voice').closest('label').hidden = true;
 
   function render() {
@@ -439,6 +466,7 @@ body.focus .orbwrap { max-width: min(460px, 54vh); }
     for (const b of presetBox.children) { b.setAttribute('aria-pressed', String(b.dataset.id === S.preset)); b.disabled = lock; }
     for (const st of STEPS) {
       $('val-' + st.key).innerHTML = S[st.key] + '<small>s</small>';
+      if (st.key === 'top') $('step-top').hidden = !(S.top > 0);
       $('dec-' + st.key).disabled = lock || S[st.key] <= st.min;
       $('inc-' + st.key).disabled = lock || S[st.key] >= st.max;
     }
@@ -446,9 +474,10 @@ body.focus .orbwrap { max-width: min(460px, 54vh); }
     const bpm = 60000 / cycleMs();
     const rate = (Number.isInteger(bpm) ? bpm : bpm.toFixed(1)) + ' breaths a minute';
     const pr = PRESETS[S.preset], ab = ABOUT[S.preset];
+    $('bell-double').hidden = !(S.top > 0);
     $('about').innerHTML = pr
       ? `<h3>${pr.name} <small>· ${rate}</small></h3><p class="lead">What it does for your body</p><ul>${ab[0].map(([t, w]) => `<li><b>${t}:</b> ${w}</li>`).join('')}</ul><p class="for"><b>Good for:</b> ${ab[1]}</p>`
-      : `<h3>Your own pattern <small>· ${S.inh} in${S.hold ? ' · ' + S.hold + ' hold' : ''} · ${S.exh} out${S.rest ? ' · ' + S.rest + ' rest' : ''} · ${rate}</small></h3><p>Keep every step comfortable. Around 5 or 6 breaths a minute, with an out-breath at least as long as the in-breath, gives the calming and lymph-moving effects. If you feel light-headed, shorten the steps.</p>`;
+      : `<h3>Your own pattern <small>· ${S.inh} in${S.top ? ' · ' + S.top + ' sniff' : ''}${S.hold ? ' · ' + S.hold + ' hold' : ''} · ${S.exh} out${S.rest ? ' · ' + S.rest + ' pause' : ''} · ${rate}</small></h3><p>Keep every step comfortable. Around 5 or 6 breaths a minute, with an out-breath at least as long as the in-breath, gives the calming and lymph-moving effects. If you feel light-headed, shorten the steps.</p>`;
     $('bpm').textContent = Number.isInteger(bpm) ? bpm : bpm.toFixed(1);
     if (!started) { $('left').textContent = fmt(S.mins * 60000); $('breaths').textContent = '0'; $('bar').style.width = '0'; }
     $('go').textContent = running ? 'Pause' : started ? 'Resume' : 'Start';
@@ -502,9 +531,13 @@ body.focus .orbwrap { max-width: min(460px, 54vh); }
     if (!audio()) return;
     try {
       const t = ac.currentTime + 0.02 + when;
-      if (name === 'inh') {
+      if (name === 'ting') {
         voice(t, [[1318.5, 1], [2637, 0.25], [3633, 0.08]], 0.16, 0.004, 1.8, level);
-      } else if (name === 'hold') {
+      } else if (name === 'double') {
+        // two quick, light tings for the top-up sniff
+        voice(t, [[1568, 1], [3136, 0.2]], 0.12, 0.004, 0.5, level);
+        voice(t + 0.16, [[1568, 1], [3136, 0.2]], 0.12, 0.004, 0.7, level);
+      } else if (name === 'deep') {
         // deep bell on A2. Phone speakers can't play 110 Hz itself, so the 220/330/440 harmonics carry the
         // bass there (the ear fills in the missing low note); headphones get the real thing.
         // Partials a fraction of a hertz apart give a slow shimmer so the long ring sounds alive.
@@ -592,13 +625,17 @@ body.focus .orbwrap { max-width: min(460px, 54vh); }
     const t = ac.currentTime, f = osc.frequency, g = gain.gain;
     f.cancelScheduledValues(t); g.cancelScheduledValues(t);
     f.setValueAtTime(f.value, t); g.setValueAtTime(g.value, t);
-    if (name === 'inh') { f.linearRampToValueAtTime(330, t + secs); g.linearRampToValueAtTime(0.06, t + 0.4); }
+    if (name === 'inh') { f.linearRampToValueAtTime(S.top > 0 ? 300 : 330, t + secs); g.linearRampToValueAtTime(0.06, t + 0.4); }
+    if (name === 'top') { f.linearRampToValueAtTime(370, t + secs); }
     if (name === 'hold') { g.linearRampToValueAtTime(0.025, t + 0.5); }
     if (name === 'exh') { f.linearRampToValueAtTime(196, t + secs); g.linearRampToValueAtTime(0.06, t + 0.4); g.linearRampToValueAtTime(0.03, t + secs); }
     if (name === 'rest') { g.linearRampToValueAtTime(0, t + 0.6); }
   }
+  // each chime tells you what to do next: soft = breathe in, double ting = top-up sniff,
+  // ting = hold (full or empty), deep bell = breathe out while it rings
+  const SOUND = { inh: 'soft', top: 'double', hold: 'ting', rest: 'ting', exh: 'deep' };
   function cue(name, secs, finished) {
-    if (S.chime && finished) bell(finished, 0, finished === 'rest' ? 0.7 : 1, secs);
+    if (S.chime && finished) bell(SOUND[name], 0, 1, secs);
     if (S.tone) toneFor(name, secs);
     if (S.voice && 'speechSynthesis' in window) {
       try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(WORDS[name][0]); u.rate = 0.85; u.pitch = 0.9; speechSynthesis.speak(u); } catch (e) {}
@@ -613,7 +650,7 @@ body.focus .orbwrap { max-width: min(460px, 54vh); }
 
   function start() {
     audio();
-    if (S.chime && !started) bell('exh');
+    if (S.chime && !started) bell('soft');
     const fresh = !started;
     if (fresh) { elapsed = 0; cur = 'inh'; curStart = 0; curDur = S.inh * 1000; cycles = 0; started = true; }
     running = true; lastT = performance.now();
@@ -643,7 +680,7 @@ body.focus .orbwrap { max-width: min(460px, 54vh); }
     const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 60);
     for (const d of Object.keys(store.log)) if (d < dayKey(cutoff)) delete store.log[d];
     save();
-    if (S.chime) { bell('inh', 0); bell('hold', 1.1, 1, 2.5); bell('exh', 2.3); }
+    if (S.chime) { bell('ting', 0); bell('deep', 1.1, 1, 2.5); bell('soft', 2.3); }
     reset(elapsed);
   }
   $('go').onclick = () => (running ? pause() : start());
@@ -669,7 +706,7 @@ body.focus .orbwrap { max-width: min(460px, 54vh); }
       if (ended) finish();
       else {
         const frac = (elapsed - curStart) / curDur; phaseFrac = frac;
-        p = cur === 'inh' ? ease(frac) : cur === 'hold' ? 1 : cur === 'exh' ? 1 - ease(frac) : 0;
+        p = fill(cur, frac);
         $('count').textContent = Math.ceil((curDur - (elapsed - curStart)) / 1000);
         $('left').textContent = fmt(total - elapsed);
         $('breaths').textContent = cycles + (cur === 'inh' ? 0 : 1);
@@ -693,7 +730,7 @@ body.focus .orbwrap { max-width: min(460px, 54vh); }
     const cyc = cycleMs(); let pos = ((ms % cyc) + cyc) % cyc;
     for (const [nm, sec] of phases()) {
       const d = sec * 1000;
-      if (pos < d) { const f = pos / d; return nm === 'inh' ? ease(f) : nm === 'hold' ? 1 : nm === 'exh' ? 1 - ease(f) : 0; }
+      if (pos < d) return fill(nm, pos / d);
       pos -= d;
     }
     return 0;
@@ -707,13 +744,13 @@ body.focus .orbwrap { max-width: min(460px, 54vh); }
     const tAt = x => tNow + (x - nowX) / W * span;
     // phase names under each stretch of the line
     wctx.font = '12px "Atkinson Hyperlegible", system-ui, sans-serif'; wctx.textAlign = 'center'; wctx.textBaseline = 'alphabetic';
-    const names = { inh: 'in', hold: 'hold', exh: 'out', rest: 'rest' };
+    const names = { inh: 'in', top: 'sniff', hold: 'hold', exh: 'out', rest: 'pause' };
     const t0 = tAt(0), t1 = tAt(W);
     for (let c = Math.floor(t0 / cyc) - 1; c * cyc < t1; c++) {
       let acc = c * cyc;
       for (const [nm, sec] of phases()) {
         const mid = acc + sec * 500, x = nowX + (mid - tNow) / span * W;
-        if (x > 12 && x < W - 12) { wctx.fillStyle = colors.muted; wctx.globalAlpha = x < nowX ? 0.45 : 0.8; wctx.fillText(names[nm], x, H - 5); }
+        if (x > 12 && x < W - 12 && sec * 1000 / span * W > 30) { wctx.fillStyle = colors.muted; wctx.globalAlpha = x < nowX ? 0.45 : 0.8; wctx.fillText(names[nm], x, H - 5); }
         acc += sec * 1000;
       }
     }
