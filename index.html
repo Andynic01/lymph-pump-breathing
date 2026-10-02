@@ -60,6 +60,8 @@ header.top p { margin: 0; color: var(--muted); }
 #orb { width: 100%; aspect-ratio: 1; display: block; }
 .count { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--display); font-weight: 500; font-size: clamp(44px, 12vw, 64px); color: var(--accent-ink); font-variant-numeric: tabular-nums; pointer-events: none; }
 .cue { text-align: center; display: grid; gap: 4px; min-height: 96px; align-content: start; }
+.pname { font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+body:not(.focus) .pname { display: none; }
 .phase { font-family: var(--display); font-weight: 700; font-size: clamp(30px, 7vw, 44px); line-height: 1.1; text-shadow: 0 0 28px rgba(134, 230, 226, 0.35); }
 .hint { color: var(--muted); max-width: 34ch; margin: 0 auto; }
 
@@ -184,9 +186,9 @@ body.focus .orbwrap { max-width: min(460px, 54vh); }
 <body>
 <div class="wrap">
   <header class="top hide-focus">
-    <div class="eyebrow">Diaphragmatic breathing</div>
-    <h1>Lymph Pump Breathing</h1>
-    <p>Slow belly breaths, paced for you. Each breath moves the diaphragm down and up, and that pressure change helps push lymph up the thoracic duct towards the neck.</p>
+    <div class="eyebrow">Lymph Pump Breathing</div>
+    <h1 id="pattern-title">Lymph pump</h1>
+    <p id="pattern-line">Slow belly breaths that help push lymph up towards your neck and back into your blood.</p>
   </header>
 
   <div class="install glass hide-focus" id="install" hidden>
@@ -201,6 +203,7 @@ body.focus .orbwrap { max-width: min(460px, 54vh); }
         <div class="count" id="count" aria-hidden="true"></div>
       </div>
       <div class="cue" aria-live="polite">
+        <div class="pname" id="pname">Lymph pump</div>
         <div class="phase" id="phase">Ready when you are</div>
         <p class="hint" id="hint">Sit or lie with knees bent. One hand on your chest, one on your belly.</p>
       </div>
@@ -326,13 +329,13 @@ body.focus .orbwrap { max-width: min(460px, 54vh); }
 <script>
 (() => {
   const PRESETS = {
-    pump:     { name: 'Lymph pump',   inh: 4, top: 0, hold: 2, exh: 6, rest: 0 },
-    gentle:   { name: 'Gentle start', inh: 3, top: 0, hold: 0, exh: 4, rest: 0 },
-    even:     { name: 'Even 5 : 5',   inh: 5, top: 0, hold: 0, exh: 5, rest: 0 },
-    longout:  { name: 'Long out-breath', inh: 4, top: 0, hold: 0, exh: 8, rest: 0 },
-    sigh:     { name: 'Physiological sigh', inh: 3, top: 1, hold: 0, exh: 6, rest: 0 },
-    box:      { name: 'Box breathing', inh: 4, top: 0, hold: 4, exh: 4, rest: 4 },
-    f478:     { name: '4-7-8',        inh: 4, top: 0, hold: 7, exh: 8, rest: 0 },
+    pump:     { name: 'Lymph pump', title: 'Lymph pump', line: 'Slow belly breaths that help push lymph up towards your neck and back into your blood.',   inh: 4, top: 0, hold: 2, exh: 6, rest: 0 },
+    gentle:   { name: 'Gentle start', title: 'Gentle start', line: 'Short, easy belly breaths. The best place to begin.', inh: 3, top: 0, hold: 0, exh: 4, rest: 0 },
+    even:     { name: 'Even 5 : 5', title: 'Even 5 : 5', line: 'Even breaths at 6 a minute, for steady, everyday calm.',   inh: 5, top: 0, hold: 0, exh: 5, rest: 0 },
+    longout:  { name: 'Long out-breath', title: 'Long out-breath', line: 'A long, slow breath out to wind your body down.', inh: 4, top: 0, hold: 0, exh: 8, rest: 0 },
+    sigh:     { name: 'Physiological sigh', title: 'Physiological sigh', line: 'Two breaths in, one long breath out. The quickest way to calm down.', inh: 3, top: 1, hold: 0, exh: 6, rest: 0 },
+    box:      { name: 'Box breathing', title: 'Box breathing', line: 'Four equal steps to steady you when you\'re under pressure.', inh: 4, top: 0, hold: 4, exh: 4, rest: 4 },
+    f478:     { name: '4-7-8', title: '4-7-8 breathing', line: 'A slow, sleepy rhythm to help you drift off.',        inh: 4, top: 0, hold: 7, exh: 8, rest: 0 },
   };
   const STEPS = [
     { key: 'inh',  label: 'In',   min: 2, max: 10 },
@@ -474,6 +477,9 @@ body.focus .orbwrap { max-width: min(460px, 54vh); }
     const bpm = 60000 / cycleMs();
     const rate = (Number.isInteger(bpm) ? bpm : bpm.toFixed(1)) + ' breaths a minute';
     const pr = PRESETS[S.preset], ab = ABOUT[S.preset];
+    const title = pr ? pr.title : 'Your own pattern';
+    $('pattern-title').textContent = title; $('pname').textContent = title;
+    $('pattern-line').textContent = pr ? pr.line : 'Your own timings. Keep every step comfortable.';
     $('bell-double').hidden = !(S.top > 0);
     $('about').innerHTML = pr
       ? `<h3>${pr.name} <small>· ${rate}</small></h3><p class="lead">What it does for your body</p><ul>${ab[0].map(([t, w]) => `<li><b>${t}:</b> ${w}</li>`).join('')}</ul><p class="for"><b>Good for:</b> ${ab[1]}</p>`
